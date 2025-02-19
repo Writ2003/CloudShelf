@@ -22,7 +22,7 @@ const Category = () => {
                 <div className='bg-blue-100 text-[14px] px-2 py-1 rounded-md text-black font-medium flex justify-center items-center cursor-pointer whitespace-nowrap'>Education</div>
                 <div className='bg-blue-100 text-[14px] px-2 py-1 rounded-md text-black font-medium flex justify-center items-center cursor-pointer whitespace-nowrap'>Adventure</div>
             </div>
-            <div className='mt-3 mb-2 px-2 grid grid-cols-4 lg:grid-cols-6 gap-6 h-64 justify-items-center'>
+            <div className='mt-3 mb-2 px-2 grid grid-cols-5 2xl:grid-cols-6 gap-6 h-64 justify-items-center'>
                 <div className='w-36 shadow-lg rounded-b-lg'>
                     <div className='h-8/10 bg-amber-900 rounded-t-lg text-2xl flex justify-center items-center text-white'>Book</div>
                     <div></div>
@@ -33,9 +33,9 @@ const Category = () => {
                 <div></div></div>
                 <div className='w-36 shadow-lg rounded-lg rounded-b-lg'><div className='h-8/10 bg-fuchsia-600 rounded-t-lg text-2xl flex justify-center items-center text-white'>Book</div>
                 <div></div></div>
-                {/*<div className='w-36 shadow-lg rounded-lg rounded-b-lg'><div className='h-8/10 bg-rose-600 rounded-t-lg text-2xl flex justify-center items-center text-white'>Book</div>
+                <div className='w-36 shadow-lg rounded-lg rounded-b-lg'><div className='h-8/10 bg-rose-600 rounded-t-lg text-2xl flex justify-center items-center text-white'>Book</div>
                 <div></div></div>
-                <div className='w-36 shadow-lg rounded-lg rounded-b-lg'><div className='h-8/10 bg-indigo-400 rounded-t-lg text-2xl flex justify-center items-center text-white'>Book</div>
+                {/*<div className='w-36 shadow-lg rounded-lg rounded-b-lg'><div className='h-8/10 bg-indigo-400 rounded-t-lg text-2xl flex justify-center items-center text-white'>Book</div>
                 <div></div></div>*/}
             </div>
         </div>

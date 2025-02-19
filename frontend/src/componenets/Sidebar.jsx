@@ -5,8 +5,8 @@ import CloudShelfLogo from '/src/assets/CloudShelf_logo_small.png?url';
 
 const Sidebar = () => {
   return (
-    <div className="w-44 lg:w-64 bg-white shadow-xl h-full p-1.5 lg:p-4 rounded-l-xl">
-      <div className="text-lg lg:text-2xl font-bold mb-10 flex gap-1 items-center">
+    <div className="w-56 2xl:w-64 bg-white shadow-xl h-full p-1.5 2xl:p-4 rounded-l-xl">
+      <div className="text-lg 2xl:text-2xl font-bold mb-10 flex gap-1 items-center">
         <img src={CloudShelfLogo} height={60} width={60}/>
         <span className='font-extrabold'>Cloud</span>Shelf
       </div>
