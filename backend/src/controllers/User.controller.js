@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import User from '../models/User.model.js';
 
 export const registerUser = async (req, res) => {
   try {
@@ -13,10 +13,10 @@ export const registerUser = async (req, res) => {
     user = new User({ username, email, password });
     await user.save();
 
-    res.status(201).json({ message: 'User registered successfully' });
+    return res.status(200).json({ message: 'User registered successfully' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -34,11 +34,21 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_TOKEN_EXPIRY });
 
-    res.status(200).json({ token });
+    res.cookie('token', token, {
+      httpOnly: true, // Prevent client-side JavaScript access
+      maxAge: process.env.JWT_TOKEN_EXPIRY, 
+    });
+
+    res.status(200).json({ success: true, message: 'Login successful', user: { username: user.username, email: user.email } });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+export const logoutUser = (req,res) => {
+  res.clearCookie('token'); 
+  res.status(200).json({ success: true, message: 'Logged out successfully' });
+}

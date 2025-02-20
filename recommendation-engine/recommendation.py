@@ -19,9 +19,9 @@ app = Flask(__name__)
 PORT = int(os.getenv("PORT", 5001))  # Convert to integer
 
 # Function to recommend books
-def recommend_books(user_history):
+def recommend_books(user_history,limit):
     if not user_history:
-        return books.sample(n=3).to_dict(orient="records")  # Random books for first-time users
+        return books.sample(n=min(limit, len(books))).to_dict(orient="records")  # Random books for first-time users
 
     user_genres = [book["genre"] for book in user_history]
     user_authors = [book["author"] for book in user_history]
@@ -36,14 +36,15 @@ def recommend_books(user_history):
     similarities = cosine_similarity(user_vector, book_vectors).flatten()
     books["similarity"] = similarities
 
-    recommended_books = books.sort_values(by="similarity", ascending=False).head(3)
+    recommended_books = books.sort_values(by="similarity", ascending=False).head(limit)
     return recommended_books.drop(columns=["features", "similarity"]).to_dict(orient="records")
 
 @app.route("/recommend", methods=["POST"])
 def recommend():
     data = request.get_json()
     user_history = data.get("history", [])
-    recommendations = recommend_books(user_history)
+    limit = data.get("limit")
+    recommendations = recommend_books(user_history,limit)
     return jsonify({"recommendations": recommendations})
 
 if __name__ == "__main__":

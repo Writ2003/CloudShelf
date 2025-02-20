@@ -1,24 +1,33 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import Book from './Book.model.js';
 
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
     unique: true,
+    trim: true
   },
   email: {
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
+    trim: true
   },
   password: {
     type: String,
     required: true,
   },
   name: {
-    type: String
-  }
+    type: String,
+    trim: true
+  },
+  history: [{
+    type: mongoose.Types.ObjectId,
+    ref: Book,
+  }]
 }, { timestamps: true });
 
 // Pre-save hook to hash the password before saving the user
