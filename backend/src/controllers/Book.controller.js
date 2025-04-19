@@ -8,9 +8,20 @@ const cardLimits = {
 
 export const getPopularBook = async (req, res) => {
     try {
-        const popularBook = await Book.find()
-        .sort({ weeklyReaders: -1 }) 
-        .limit(1); 
+        const popularBook = await Book.aggregate([
+          {
+              $addFields: {
+                  popularityScore: {
+                      $add: [
+                          { $multiply: ["$weeklyReaders", 0.7] }, // Assigning a weight
+                          { $multiply: ["$rating", 0.3] }
+                      ]
+                  }
+              }
+          },
+          { $sort: { popularityScore: -1 } },
+          { $limit: 1 }
+      ]);
 
         if(!popularBook) return res.status(404).json({success:false, message:"Couldn't find any popular book, something went wrong"});
         return res.status(200).json({success:true, data:popularBook});
@@ -56,4 +67,57 @@ export const getRecommendation = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: "Recommendation service error" });
     }
+}
+
+export const getBooks = async(req,res) => {
+    const { screenSize } = req.query;
+    const limit = cardLimits[screenSize] || cardLimits.medium;
+    try {
+      const books = await Book.find().limit(limit)
+      if(!books) return res.status(404).json({success: false, message: "Something went wrong, couldn't fetch books"});
+      return res.status(200).json({success: true, data: books});
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({success: false, message: "Couldn't connect the books server"});
+    }
+}
+
+export const getCategories = async(req,res) => {
+  try {
+    const genres = await Book.aggregate([
+      { $unwind: "$genre" },
+      {
+        $group: {
+          _id:"$genre",
+          books:{$push: "$$ROOT"},
+          totalBooks:{$sum:1}
+        }
+      },
+      {
+        $sort:{
+          totalBooks:-1,
+        }
+      },
+      {
+        $limit:12
+      }
+    ]);
+    if(!genres) res.status(404).json({message: "Unable to fetch genres"});
+    res.status(200).json({data:genres});
+  } catch (error) {
+    res.status(500).json({message: "Internal server error while fetching genres"})
+  }
+}
+
+export const getBookInfo = async(req,res) => {
+  try {
+    const {bookId} = req.params;
+    console.log(bookId);
+    if(!bookId) res.status(404).json({message:"BookId not found!"});
+    const book = await Book.findOne({_id:bookId});
+    if(!book) res.status(404).json({message:"No such book found!"});
+    return res.status(200).json(book);
+  } catch (error) {
+    res.status(500).json({message: "Internal server error while fetching book information"})
+  }
 }

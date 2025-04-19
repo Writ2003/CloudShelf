@@ -40,3 +40,50 @@ mongoose.connect(MONGO_URI)
   .catch((err) => {
     console.error('MongoDB connection error:', err);
   });
+
+/*import { fileURLToPath } from 'url';
+import path from 'path';
+import csvParser from 'csv-parser';
+import fs from 'fs';
+import Book from './src/models/Book.model.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const csvFilePath = path.join(__dirname, 'public', 'book_dataset_real_covers.csv');
+
+console.log(csvFilePath);
+
+const importCSV = async () => {
+  const books = [];
+
+  fs.createReadStream(csvFilePath)
+    .pipe(csvParser())
+    .on('data', (row) => {
+      books.push({
+        title: row.title,
+        author: row.author,
+        publisher: row.publisher,
+        noOfPages: parseInt(row.noOfPages, 10),
+        rating: parseFloat(row.rating),
+        description: row.description,
+        publicationDate: new Date(row.publicationDate),
+        coverImage: row.coverImage,
+        genre: row.genre.split(', ').map(g => g.trim()),
+        totalReaders: parseInt(row.totalReaders, 10),
+        weeklyReaders: parseInt(row.weeklyReaders, 10),
+      });
+    })
+    .on('end', async () => {
+      try {
+        await Book.insertMany(books);
+        console.log('CSV Data Successfully Imported!');
+        mongoose.connection.close();
+      } catch (error) {
+        console.error('Error inserting data:', error);
+      }
+    });
+};
+
+// Run the import function
+importCSV();*/
