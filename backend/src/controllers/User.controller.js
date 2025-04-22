@@ -22,9 +22,10 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { usernameOrEmail, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ $or:[{email: usernameOrEmail}, {username:usernameOrEmail}] });
+    console.log(user);
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -38,9 +39,11 @@ export const loginUser = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true, // Prevent client-side JavaScript access
-      maxAge: process.env.JWT_TOKEN_EXPIRY, 
+      maxAge: parseInt(process.env.JWT_TOKEN_EXPIRY)*24 * 60 * 60 * 1000, 
+      secure: false,
+      sameSite: 'lax' 
     });
-
+   
     res.status(200).json({ success: true, message: 'Login successful', user: { username: user.username, email: user.email } });
   } catch (error) {
     console.error(error);

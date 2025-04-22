@@ -2,11 +2,31 @@ import React, { useState } from 'react'
 import libraryBackground from '/src/assets/janko-ferlic-sfL_QOnmy00-unsplash.jpg?url'
 import cloudShelfLogo from '/src/assets/CloudShelf logo.png?url'
 import { Link } from 'react-router-dom'
+import axios from 'axios';
+import { toast, ToastContainer } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+
 const Login = () => {
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
-  const submitLogin = () => {
-
+  const navigate = useNavigate();
+  const submitLogin = async(e) => {
+    e.preventDefault();
+    if(!usernameOrEmail || !password) return;
+    try {
+      const response = await axios.post("http://localhost:5000/api/user/login",{
+        usernameOrEmail,password
+      },{withCredentials: true});
+      if(!response.data.success) throw "Login Unsuccessful"
+      console.log(response.data);
+      console.log(response.data.message);
+      toast.success(response.data.message);
+      setTimeout(() => {
+        navigate("/",{replace:true});
+      },1000);
+    } catch (error) {
+      console.error("Error while logging in, error: ",error);
+    }
   }
   return (
     <>
@@ -22,12 +42,12 @@ const Login = () => {
                 </div>
                 <form onSubmit={submitLogin} className='flex flex-col gap-6 justify-center p-6'>
                   <div className='flex flex-col gap-2'>
-                    <label for="email address or username" className='font-medium'>Username or Email</label>
-                    <input type="text" id='email address or username' value={usernameOrEmail} onChange={(e) => setUsernameOrEmail(e.target.value)} placeholder='Type email or username here' className='outline-none border-b border-gray-400 pb-2' required/>
+                    <label htmlFor="email address or username" className='font-medium'>Username or Email</label>
+                    <input type="text" id='email address or username' value={usernameOrEmail} onChange={(e) => setUsernameOrEmail(e.target.value)} placeholder='Type email or username here' className='outline-none border-b border-gray-400 pb-2' autoComplete='username' required/>
                   </div>
                   <div className='flex flex-col gap-2'>
-                    <label for="password" className='font-medium'>Password</label>
-                    <input type="password" id='password' value={password} onChange={(e) => setPassword(e.target.value)} placeholder='Type password here' className='outline-none border-b border-gray-400 pb-2' required/>
+                    <label htmlFor="password" className='font-medium'>Password</label>
+                    <input type="password" id='password' value={password} onChange={(e) => setPassword(e.target.value)} placeholder='Type password here' className='outline-none border-b border-gray-400 pb-2' autoComplete='current-password' required/>
                   </div>
                   <button type='submit' className='bg-blue-400 p-2 font-medium text-white cursor-pointer tracking-wide text-lg'> Login </button>
                 </form>
@@ -36,6 +56,7 @@ const Login = () => {
                 </div>
               </div>
             </div>
+            <ToastContainer position='top-center'/>
         </div>
     </>
   )

@@ -5,6 +5,8 @@ import Dashboard from './componenets/Dashboard'
 import BookInfo from './componenets/BookInfo'
 import Login from './componenets/Login'
 import Register from './componenets/Register'
+import ProtectedRoute from "./componenets/ProtectedRoutes";
+
 function App() {
 
   return (
@@ -12,9 +14,11 @@ function App() {
       <Routes>
         <Route path='/login' element={<Login/>}/>
         <Route path='/register' element={<Register/>}/>
-        <Route path='/' element={<Layout/>}>
-          <Route index element={<Dashboard/>}/>
-          <Route path='bookinfo/:bookid' element={<BookInfo/>}/>
+        <Route element={<ProtectedRoute />}>
+          <Route path='/' element={<Layout/>}>
+            <Route index element={<Dashboard/>}/>
+            <Route path='bookinfo/:bookid' element={<BookInfo/>}/>
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>
