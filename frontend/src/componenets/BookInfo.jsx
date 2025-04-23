@@ -4,8 +4,10 @@ import { useParams } from 'react-router-dom'
 import {BookHeart, BookOpen, SendHorizonal} from 'lucide-react'
 import { Stack, Rating, Box} from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
-import minion from '/src/assets/minion.png?url'
+import minion from '/src/assets/minion.png?url';
+import avatar from '/src/assets/avatar.jpg?url';
 import ExpandableInlineText from './ExpandableInlineText';
+import { Link } from 'react-router-dom';
 
 const label = {1:'Very Poor',2:'Poor',3:'Average',4:'Good',5:'Excellent'}
 function getLabelText(value) {
@@ -20,7 +22,6 @@ const BookInfo = () => {
     const [hover, setHover] = useState(-1);
     const [userReview, setUserReview] = useState("");
     const textareaRef = useRef(null);
-    //const [colorIndex, setColorIndex] = useState(Math.floor(Math.random() * 6));
 
     const colors = [
         'ring-amber-400 from-amber-500 to-amber-400',
@@ -62,10 +63,6 @@ const BookInfo = () => {
     const saveReview = async(e) => {
         e.preventDefault();
     }
-    const getRandomColor = (color,index) => {
-        const template = chooseRandomColor[index % chooseRandomColor.length];
-        return color.replace("something", template);
-    }
   return (
     <>
         {!loading && <div className='px-3 py-3'>
@@ -98,6 +95,38 @@ const BookInfo = () => {
                         <button className='bg-amber-400 shadow-lg cursor-pointer text-white font-serif px-3 py-4 rounded-md mt-2 w-36 inline-flex gap-2 items-center justify-center'>Favourite <BookHeart width={20} height={20}/></button>
                     </div>
                 </div>
+            </div>
+            <div className='bg-slate-50 p-3 mt-3 rounded-lg'>
+                <div className='border-b border-gray-400 pb-2 flex justify-between items-center'>
+                    <p className='text-lg tracking-wide font-semibold text-gray-700 mx-3'>Recent Discussions</p>
+                    <Link className='text-blue-500 mx-3 font-medium cursor-pointer text-[14px]'>New Topic</Link>
+                </div>
+                <div className='grid grid-cols-2 px-6 my-1.5 font-medium text-[12px] items-center border-b border-gray-400 pb-2'>
+                    <p className=''>TITLE</p>
+                    <div className='grid grid-cols-3 justify-items-center'>
+                        <p>REPLIES</p>
+                        <p>VIEWS</p>
+                        <p>LATEST POST</p>
+                    </div>
+                </div>
+                <div className='grid grid-cols-2 px-6 mt-1.5 font-medium text-[12px] border-b border-gray-400 pb-2'>
+                    <div className='flex items-center gap-3'>
+                        <Link><img src={avatar} alt="profile-pic" className='rounded-full h-[24px] w-[24px] ring ring-offset-2 ring-gray-400'/></Link>
+                        <Link><p className='text-[14px] text-blue-500 cursor-pointer'>Ending Spoiler alert, discussion on the movie</p></Link>
+                    </div>
+                    <div className='grid grid-cols-3 justify-items-center items-center'>
+                        <p>5</p>
+                        <p>342</p>
+                        <div className='flex gap-3 items-center'>
+                            <Link><img src={minion} alt="avatar" className='rounded-full h-[24px] w-[24px] ring ring-offset-2 ring-gray-400 cursor-pointer'/></Link>
+                            <div className='flex flex-col gap-1'>
+                                <p>Minion</p>
+                                <p className='text-gray-500'>Apr 24, 2025</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className='flex justify-center items-center rounded-b-lg p-1 bg-slate-200/60'><button className='cursor-pointer text-[14px] text-blue-600 font-medium tracking-wide'>View all</button></div>
             </div>
             <div className='bg-slate-50 p-3 mt-3 rounded-lg'>
                 <div className='grid grid-cols-3 gap-3 p-3 tracking-wide'>
@@ -137,10 +166,10 @@ const BookInfo = () => {
                     </Box>
                 </div>
                 <div className='flex items-center gap-3 mx-3'>
-                    <textarea type="text" value={userReview} onChange={handleReview} placeholder='Type your review' className='border-b border-gray-400 py-3.5 overflow-y-auto resize-none leading-5 text-[16px] w-2xl outline-none' rows={1}/>
+                    <textarea type="text" value={userReview} onChange={handleReview} placeholder='Type your review...' className='border border-gray-400 p-3 overflow-y-auto resize-none leading-5 text-[16px] w-2xl outline-none' rows={2}/>
                     <button onClick={saveReview} className='bg-slate-400 shadow-lg p-2 rounded-lg cursor-pointer'><SendHorizonal width={20} height={20} color='white'/></button>
                 </div>
-                <p className='text-xl font-semibold tracking-wide mx-3 my-6'>User Reviews</p>
+                <p className='text-xl font-semibold tracking-wide mx-3 my-6 border-b border-gray-400 pb-3'>User Reviews</p>
                 <div className='mx-3'>
                     {Array.from({length:6},(ele,ind) =>(<div key={ind} className='w-full my-6'>
                         <div className='flex items-center gap-3'>
