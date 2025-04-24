@@ -3,14 +3,14 @@ import User from '../models/User.model.js';
 
 export const registerUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, userType } = req.body;
 
     let user = await User.findOne({ email });
     if (user) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    user = new User({ username, email, password });
+    user = new User({ username, email, password, userType });
     await user.save();
 
     return res.status(200).json({ message: 'User registered successfully' });
@@ -22,7 +22,7 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
-    const { usernameOrEmail, password } = req.body;
+    const { usernameOrEmail, password, userType } = req.body;
 
     const user = await User.findOne({ $or:[{email: usernameOrEmail}, {username:usernameOrEmail}] });
     console.log(user);
@@ -35,6 +35,8 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    if(user.userType!==userType) return res.status(400).json({message: `No such ${userType} found!` });
+
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_TOKEN_EXPIRY });
 
     res.cookie('token', token, {
@@ -44,7 +46,7 @@ export const loginUser = async (req, res) => {
       sameSite: 'lax' 
     });
    
-    res.status(200).json({ success: true, message: 'Login successful', user: { username: user.username, email: user.email } });
+    res.status(200).json({ success: true, message: 'Login successful', user: { username: user.username, email: user.email, userType:user.userType } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Server error' });

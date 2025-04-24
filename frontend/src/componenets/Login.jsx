@@ -9,15 +9,15 @@ import { useNavigate } from 'react-router-dom';
 const Login = () => {
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [userType, setUserType] = useState('Reader');
   const navigate = useNavigate();
   const submitLogin = async(e) => {
     e.preventDefault();
     if(!usernameOrEmail || !password) return;
     try {
       const response = await axios.post("http://localhost:5000/api/user/login",{
-        usernameOrEmail,password
+        usernameOrEmail,password,userType
       },{withCredentials: true});
-      if(!response.data.success) throw "Login Unsuccessful"
       console.log(response.data);
       console.log(response.data.message);
       toast.success(response.data.message);
@@ -25,8 +25,17 @@ const Login = () => {
         navigate("/",{replace:true});
       },1000);
     } catch (error) {
+      if(error.status>=400 && error.status<500) toast.error("User not found!");
+      else toast.error("Server error!");
       console.error("Error while logging in, error: ",error);
+      if(error.status===400) setTimeout(() => {
+        navigate("/register",{replace:true});
+      },1000)
     }
+  }
+  const handleUserType = (e,userType) => {
+    e.preventDefault();
+    setUserType(userType);
   }
   return (
     <>
@@ -41,6 +50,10 @@ const Login = () => {
                   <p className='text-4xl tracking-wider font-medium font-serif text-gray-600'><span className='text-blue-400 font-extrabold'>Cloud</span>Shelf</p>
                 </div>
                 <form onSubmit={submitLogin} className='flex flex-col gap-6 justify-center p-6'>
+                  <div className='flex mx-auto cursor-pointer items-center justify-between text-lg tracking-wide font-medium font-serif border rounded-full text-slate-600 bg-gray-100 border-gray-100'>
+                    <button onClick={(e) => handleUserType(e,"Reader")} className={`cursor-pointer px-6 py-3 rounded-full ${userType==='Reader'?'bg-gray-200':''}`}>Reader</button>
+                    <button onClick={(e) => handleUserType(e,"Admin")} className={`cursor-pointer px-6 py-3 rounded-full ${userType==='Admin'?'bg-gray-200':''}`}>Admin</button>
+                  </div>
                   <div className='flex flex-col gap-2'>
                     <label htmlFor="email address or username" className='font-medium'>Username or Email</label>
                     <input type="text" id='email address or username' value={usernameOrEmail} onChange={(e) => setUsernameOrEmail(e.target.value)} placeholder='Type email or username here' className='outline-none border-b border-gray-400 pb-2' autoComplete='username' required/>
