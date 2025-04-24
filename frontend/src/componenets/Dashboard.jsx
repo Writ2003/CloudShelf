@@ -1,7 +1,7 @@
 import React from 'react'
-import Card from './Recommendation'
-import Category from './Category'
-import PopularBook from './PopularBook'
+import Card from './ui/Recommendation'
+import Category from './ui/Category'
+import PopularBook from './ui/PopularBook'
 
 const Dashboard = () => {
   return (

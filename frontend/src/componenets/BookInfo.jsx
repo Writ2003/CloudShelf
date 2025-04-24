@@ -1,13 +1,17 @@
 import axios from 'axios';
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, createContext } from 'react'
 import { useParams } from 'react-router-dom'
 import {BookHeart, BookOpen, SendHorizonal} from 'lucide-react'
 import { Stack, Rating, Box} from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import minion from '/src/assets/minion.png?url';
 import avatar from '/src/assets/avatar.jpg?url';
-import ExpandableInlineText from './ExpandableInlineText';
+import ExpandableInlineText from './ui/ExpandableInlineText';
+import CreateDiscussonTopic from './ui/CreateDiscussonTopic';
 import { Link } from 'react-router-dom';
+
+export const discussonContext = createContext();
+export const DiscussionContextProvider = discussonContext.Provider;
 
 const label = {1:'Very Poor',2:'Poor',3:'Average',4:'Good',5:'Excellent'}
 function getLabelText(value) {
@@ -22,6 +26,7 @@ const BookInfo = () => {
     const [hover, setHover] = useState(-1);
     const [userReview, setUserReview] = useState("");
     const textareaRef = useRef(null);
+    const [createDiscusson,setCreateDiscusson] = useState(false);
 
     const colors = [
         'ring-amber-400 from-amber-500 to-amber-400',
@@ -63,10 +68,14 @@ const BookInfo = () => {
     const saveReview = async(e) => {
         e.preventDefault();
     }
+    const handleSetCreateDiscusson = (e = null) => {
+        if(e) e.preventDefault();
+        setCreateDiscusson(prev => !prev);
+    }
   return (
-    <>
-        {!loading && <div className='px-3 py-3'>
-            <div className='flex bg-slate-50 rounded-lg min-h-96'>
+    <DiscussionContextProvider value={{handleSetCreateDiscusson}}>
+        {!loading && <div className={`px-3 py-3`}>
+            <div className={`flex bg-slate-50 rounded-lg min-h-96 ${createDiscusson?'blur-[2px]':''}`}>
                 <div className='flex gap-6 items-center justify-start m-6 h-80'>
                     <img src={bookInfo?.coverImage} className='h-full max-w-60 rounded-2xl object-cover border border-gray-500 shadow-md'/>
                 </div>
@@ -96,10 +105,10 @@ const BookInfo = () => {
                     </div>
                 </div>
             </div>
-            <div className='bg-slate-50 p-3 mt-3 rounded-lg'>
+            <div className={`bg-slate-50 p-3 mt-3 rounded-lg relative ${createDiscusson?'blur-[2px]':''}`}>
                 <div className='border-b border-gray-400 pb-2 flex justify-between items-center'>
                     <p className='text-lg tracking-wide font-semibold text-gray-700 mx-3'>Recent Discussions</p>
-                    <Link className='text-blue-500 mx-3 font-medium cursor-pointer text-[14px]'>New Topic</Link>
+                    <button onClick={handleSetCreateDiscusson} className='text-blue-500 mx-3 font-medium cursor-pointer text-[14px]'>New Topic</button>
                 </div>
                 <div className='grid grid-cols-2 px-6 my-1.5 font-medium text-[12px] items-center border-b border-gray-400 pb-2'>
                     <p className=''>TITLE</p>
@@ -109,7 +118,7 @@ const BookInfo = () => {
                         <p>LATEST POST</p>
                     </div>
                 </div>
-                <div className='grid grid-cols-2 px-6 mt-1.5 font-medium text-[12px] border-b border-gray-400 pb-2'>
+                <div className={`grid grid-cols-2 px-6 mt-1.5 font-medium text-[12px] border-b border-gray-400 pb-2`}>
                     <div className='flex items-center gap-3'>
                         <Link><img src={avatar} alt="profile-pic" className='rounded-full h-[24px] w-[24px] ring ring-offset-2 ring-gray-400'/></Link>
                         <Link><p className='text-[14px] text-blue-500 cursor-pointer'>Ending Spoiler alert, discussion on the movie</p></Link>
@@ -126,9 +135,10 @@ const BookInfo = () => {
                         </div>
                     </div>
                 </div>
-                <div className='flex justify-center items-center rounded-b-lg p-1 bg-slate-200/60'><button className='cursor-pointer text-[14px] text-blue-600 font-medium tracking-wide'>View all</button></div>
+                <div className={`flex justify-center items-center rounded-b-lg p-1 bg-slate-200/60`}><button className='cursor-pointer text-[14px] text-blue-600 font-medium tracking-wide'>View all</button></div>
             </div>
-            <div className='bg-slate-50 p-3 mt-3 rounded-lg'>
+            {createDiscusson && <CreateDiscussonTopic/>}
+            <div className={`bg-slate-50 p-3 mt-3 rounded-lg ${createDiscusson?'blur-[2px]':''}`}>
                 <div className='grid grid-cols-3 gap-3 p-3 tracking-wide'>
                     <div className='flex flex-col items-center gap-1 border-r border-black'>
                         <p className=''>Weekly Readers</p>
@@ -184,7 +194,7 @@ const BookInfo = () => {
                 <div className='mx-3 w-full flex justify-center items-center font-medium text-white'><button className='bg-blue-400 shadow-md py-1 px-3 cursor-pointer rounded-md'>Load More</button></div>
             </div>
         </div>}
-    </>
+    </DiscussionContextProvider>
   )
 }
 
