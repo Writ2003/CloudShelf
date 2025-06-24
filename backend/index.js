@@ -21,6 +21,7 @@ app.use(cookieParser());
 import bookRoutes from "./src/routes/Book.routes.js"
 import userRoutes from "./src/routes/User.routes.js"
 import protectedRoutes from "./src/routes/protected.routes.js"
+import searchRoutes from "./src/routes/Search.routes.js"
 
 // Default route
 app.get('/', (req, res) => {
@@ -30,6 +31,7 @@ app.get('/', (req, res) => {
 app.use("/api/book",bookRoutes);
 app.use("/api/user", userRoutes);
 app.use('/api/protectedRoute',protectedRoutes);
+app.use("/api/search",searchRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;

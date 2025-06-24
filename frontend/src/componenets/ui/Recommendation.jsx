@@ -56,7 +56,7 @@ const Card = () => {
                     <div className='mt-3 mb-2 px-2 grid grid-cols-5 2xl:grid-cols-6 gap-3 2xl:gap-6 h-64 justify-items-center'>
                         {books.map(book => (
                             <Link to={`/bookInfo/${book._id}`} key={book?._id} className='w-36 shadow-lg rounded-b-lg cursor-pointer'>
-                                <img src={book?.coverImage} alt={book?.title} className='h-8/10 bg-amber-900 rounded-t-lg text-2xl flex justify-center items-center text-white'/>
+                                <img src={book?.coverImage} alt={book?.title} className='h-52 bg-amber-900 rounded-t-lg text-2xl flex justify-center items-center text-white'/>
                                 <div className='flex flex-col gap-1 px-3 pt-0.5'>
                                     <p title={book?.title} className='truncate font-semibold text-[14px]'>{book?.title}</p>
                                     <p title={book?.author} className='truncate text-[12px]'>{book?.author}</p>
