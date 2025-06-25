@@ -1,14 +1,14 @@
 import React, { useContext } from 'react';
-import { discussonContext } from '../BookInfo';
+import { DiscussionContext } from '../BookInfo';
 
 
 const CreateDiscussionTopic = () => {
-  const { handleSetCreateDiscusson } = useContext(discussonContext);
+  const { handleSetCreateDiscussion } = useContext(DiscussionContext);
 
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 z-40" onClick={handleSetCreateDiscusson} />
+      <div className="fixed inset-0 z-40" onClick={handleSetCreateDiscussion} />
 
       {/* Modal */}
       <div className="fixed z-50 inset-0 flex items-center justify-center px-4">
@@ -16,7 +16,7 @@ const CreateDiscussionTopic = () => {
           {/* Close Button */}
           <button
             className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl"
-            onClick={handleSetCreateDiscusson}
+            onClick={handleSetCreateDiscussion}
           >
             &times;
           </button>
@@ -46,7 +46,7 @@ const CreateDiscussionTopic = () => {
           <div className="flex justify-end gap-3">
             <button
               className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded"
-              onClick={handleSetCreateDiscusson}
+              onClick={handleSetCreateDiscussion}
             >
               Cancel
             </button>

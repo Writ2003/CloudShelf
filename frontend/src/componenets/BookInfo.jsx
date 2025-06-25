@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useEffect, useState, useRef, createContext } from 'react'
+import { useEffect, useState, useRef, createContext } from 'react'
 import { useParams } from 'react-router-dom'
 import {BookHeart, BookOpen, SendHorizonal} from 'lucide-react'
 import { Stack, Rating, Box} from '@mui/material';
@@ -7,11 +7,15 @@ import StarIcon from '@mui/icons-material/Star';
 import minion from '/src/assets/minion.png?url';
 import avatar from '/src/assets/avatar.jpg?url';
 import ExpandableInlineText from './ui/ExpandableInlineText';
-import CreateDiscussonTopic from './ui/CreateDiscussonTopic';
+import CreateDiscussionTopic from './ui/CreateDiscussionTopic';
 import { Link } from 'react-router-dom';
+import useAuth from '../hooks/useAuth';
+import IconButton from '@mui/material/IconButton';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 
-export const discussonContext = createContext();
-export const DiscussionContextProvider = discussonContext.Provider;
+export const DiscussionContext = createContext();
+export const DiscussionContextProvider = DiscussionContext.Provider;
 
 const label = {1:'Very Poor',2:'Poor',3:'Average',4:'Good',5:'Excellent'}
 function getLabelText(value) {
@@ -22,11 +26,13 @@ const BookInfo = () => {
     const { bookid } = useParams();
     const [bookInfo, setBookInfo] = useState({});
     const [loading, setLoading] = useState(true);
+    const [isFavorite, setIsFavorite] = useState(false);
     const [value, setValue] = useState(0);
     const [hover, setHover] = useState(-1);
     const [userReview, setUserReview] = useState("");
     const textareaRef = useRef(null);
-    const [createDiscusson,setCreateDiscusson] = useState(false);
+    const [createDiscussion,setCreateDiscussion] = useState(false);
+    const { user } = useAuth();
 
     const colors = [
         'ring-amber-400 from-amber-500 to-amber-400',
@@ -41,9 +47,10 @@ const BookInfo = () => {
         const fetchBookInfo = async() => {
             setLoading(true);
             try {
-                const response = await axios.get(`http://localhost:5000/api/book/getBook/${bookid}`);
+                const response = await axios.get(`http://localhost:5000/api/book/getBook/${bookid}`,{withCredentials: true});
                 console.log(response.data)
-                setBookInfo(response.data)
+                setBookInfo(response.data.book)
+                setIsFavorite(response.data.isFavourite);
             } catch (error) {
                 console.error("Error: ",error);
             } finally {
@@ -51,7 +58,7 @@ const BookInfo = () => {
             }
         }
         fetchBookInfo();
-    },[])
+    },[bookid])
     const capitalizeWords = (str) => {
         return str.toLowerCase().split(' ').map(function(word) {
           return word.charAt(0).toUpperCase() + word.slice(1);
@@ -68,14 +75,30 @@ const BookInfo = () => {
     const saveReview = async(e) => {
         e.preventDefault();
     }
-    const handleSetCreateDiscusson = (e = null) => {
+    const handleSetCreateDiscussion = (e = null) => {
         if(e) e.preventDefault();
-        setCreateDiscusson(prev => !prev);
+        setCreateDiscussion(prev => !prev);
+    }
+    const incrementReadCount = async() => {
+        try {
+            const response = await axios.post(`http://localhost:5000/api/book/read/${bookid}`,{},{withCredentials: true});
+            console.log(response.data.message);
+        } catch (error) {
+            console.log('Error while incrementing read count, ',error);
+        }
+    }
+    const addToFavourite = async() => {
+        try {
+            const response = await axios.post(`http://localhost:5000/api/book/addToFavourite/${bookid}`,{},{withCredentials: true});
+            console.log(response.data.message);
+        } catch (error) {
+            console.log('Error while adding this to favourites, ',error);
+        }
     }
   return (
-    <DiscussionContextProvider value={{handleSetCreateDiscusson}}>
+    <DiscussionContextProvider value={{handleSetCreateDiscussion}}>
         {!loading && <div className={`px-3 py-3`}>
-            <div className={`flex bg-slate-50 rounded-lg min-h-96 ${createDiscusson?'blur-[2px]':''}`}>
+            <div className={`flex bg-slate-50 rounded-lg min-h-96 ${createDiscussion?'blur-[2px]':''}`}>
                 <div className='flex gap-6 items-center justify-start m-6 h-80'>
                     <img src={bookInfo?.coverImage} className='h-full max-w-60 rounded-2xl object-cover border border-gray-500 shadow-md'/>
                 </div>
@@ -100,15 +123,32 @@ const BookInfo = () => {
                         </div>
                     </div>
                     <div className='w-72 flex gap-2 justify-center'>
-                        <button className='bg-blue-500 shadow-lg cursor-pointer text-white font-serif px-3 py-4 rounded-md mt-2 w-36 inline-flex gap-2 items-center justify-center'>Read Now <BookOpen width={20} height={20}/></button>
-                        <button className='bg-amber-400 shadow-lg cursor-pointer text-white font-serif px-3 py-4 rounded-md mt-2 w-36 inline-flex gap-2 items-center justify-center'>Favourite <BookHeart width={20} height={20}/></button>
+                        <button onClick={incrementReadCount} className='bg-blue-500 shadow-lg cursor-pointer text-white font-serif px-3 py-4 rounded-md mt-2 w-36 inline-flex gap-2 items-center justify-center'>Read Now <BookOpen width={20} height={20}/></button>
+                         <IconButton 
+                            onClick={() => {setIsFavorite(prev => !prev); addToFavourite()}}
+                            sx={{
+                                  backgroundColor: isFavorite ? 'rgba(255, 0, 0, 0.1)' : 'rgba(0,0,0,0.05)',
+                                  borderRadius: '50%', // Makes it circular
+                                  padding: '20px',
+                                  transition: 'all 0.3s ease',
+                                  '&:hover': {
+                                    backgroundColor: isFavorite ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0,0,0,0.1)',
+                                  },
+                                }}
+                            >
+                            {isFavorite ? (
+                              <FavoriteIcon sx={{ color: 'red' }} />
+                            ) : (
+                              <FavoriteBorderIcon />
+                            )}
+                        </IconButton>
                     </div>
                 </div>
             </div>
-            <div className={`bg-slate-50 p-3 mt-3 rounded-lg relative ${createDiscusson?'blur-[2px]':''}`}>
+            <div className={`bg-slate-50 p-3 mt-3 rounded-lg relative ${createDiscussion?'blur-[2px]':''}`}>
                 <div className='border-b border-gray-400 pb-2 flex justify-between items-center'>
                     <p className='text-lg tracking-wide font-semibold text-gray-700 mx-3'>Recent Discussions</p>
-                    <button onClick={handleSetCreateDiscusson} className='text-blue-500 mx-3 font-medium cursor-pointer text-[14px]'>New Topic</button>
+                    <button onClick={handleSetCreateDiscussion} className='text-blue-500 mx-3 font-medium cursor-pointer text-[14px]'>New Topic</button>
                 </div>
                 <div className='grid grid-cols-2 px-6 my-1.5 font-medium text-[12px] items-center border-b border-gray-400 pb-2'>
                     <p className=''>TITLE</p>
@@ -137,8 +177,8 @@ const BookInfo = () => {
                 </div>
                 <div className={`flex justify-center items-center rounded-b-lg p-1 bg-slate-200/60`}><button className='cursor-pointer text-[14px] text-blue-600 font-medium tracking-wide'>View all</button></div>
             </div>
-            {createDiscusson && <CreateDiscussonTopic/>}
-            <div className={`bg-slate-50 p-3 mt-3 rounded-lg ${createDiscusson?'blur-[2px]':''}`}>
+            {createDiscussion && <CreateDiscussionTopic/>}
+            <div className={`bg-slate-50 p-3 mt-3 rounded-lg ${createDiscussion?'blur-[2px]':''}`}>
                 <div className='grid grid-cols-3 gap-3 p-3 tracking-wide'>
                     <div className='flex flex-col items-center gap-1 border-r border-black'>
                         <p className=''>Weekly Readers</p>

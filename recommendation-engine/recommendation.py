@@ -1,51 +1,90 @@
-import random
 import os
-import pandas as pd
+from pymongo import MongoClient
 from flask import Flask, request, jsonify
-from sklearn.metrics.pairwise import cosine_similarity
+from flask_cors import CORS
+from bson import ObjectId
 from sklearn.feature_extraction.text import TfidfVectorizer
-
-# Sample dataset (Replace with actual DB data)
-books = pd.DataFrame([
-    {"id": 1, "title": "Book A", "genre": "Fantasy", "author": "Author X"},
-    {"id": 2, "title": "Book B", "genre": "Sci-Fi", "author": "Author Y"},
-    {"id": 3, "title": "Book C", "genre": "Fantasy", "author": "Author Z"},
-    {"id": 4, "title": "Book D", "genre": "Sci-Fi", "author": "Author X"},
-    {"id": 5, "title": "Book E", "genre": "Mystery", "author": "Author Y"},
-])
+from sklearn.metrics.pairwise import cosine_similarity
+import pandas as pd
+from bson import ObjectId
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
-PORT = int(os.getenv("PORT", 5001))  # Convert to integer
+# MongoDB Atlas connection
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
+db = client["test"]
+book_collection = db["books"]
+PORT = int(os.getenv("PORT",5050));
 
-# Function to recommend books
-def recommend_books(user_history,limit):
-    if not user_history:
-        return books.sample(n=min(limit, len(books))).to_dict(orient="records")  # Random books for first-time users
+# Recommendation function
 
-    user_genres = [book["genre"] for book in user_history]
-    user_authors = [book["author"] for book in user_history]
+def recommend_books(user_history_ids, limit):
+    print("🧠 Incoming history IDs:", user_history_ids)
 
-    books["features"] = books["genre"] + " " + books["author"]
-    vectorizer = TfidfVectorizer()
-    book_vectors = vectorizer.fit_transform(books["features"])
+    # Step 1: Convert to ObjectIds
+    try:
+        object_ids = [ObjectId(_id) for _id in user_history_ids]
+    except Exception as e:
+        print("❌ Invalid ObjectId in history:", e)
+        return []
+
+    # Step 2: Fetch books from MongoDB
+    user_books = list(book_collection.find({"_id": {"$in": object_ids}}))
+    all_books = list(book_collection.find())
+
+    if not user_books or not all_books:
+        print("⚠️ Empty user_books or all_books")
+        return []
+
+    # Step 3: Convert to DataFrame
+    books_df = pd.DataFrame(all_books)
+
+    # Make sure 'genre' and 'author' fields exist and are strings
+    books_df["genre"] = books_df["genre"].astype(str)
+    books_df["author"] = books_df["author"].astype(str)
+    books_df["features"] = books_df["genre"] + " " + books_df["author"]
+
+    # Step 4: Build user profile
+    user_genres = [str(book.get("genre", "")) for book in user_books]
+    user_authors = [str(book.get("author", "")) for book in user_books]
     
     user_profile = " ".join(user_genres + user_authors)
-    user_vector = vectorizer.transform([user_profile])
-    
-    similarities = cosine_similarity(user_vector, book_vectors).flatten()
-    books["similarity"] = similarities
+    print("👤 User profile string:", user_profile)
 
-    recommended_books = books.sort_values(by="similarity", ascending=False).head(limit)
+    # Step 5: TF-IDF and similarity
+    vectorizer = TfidfVectorizer()
+    book_vectors = vectorizer.fit_transform(books_df["features"])
+    user_vector = vectorizer.transform([user_profile])
+    similarities = cosine_similarity(user_vector, book_vectors).flatten()
+
+    # Step 6: Score and return
+    books_df["similarity"] = similarities
+    recommended_books = books_df.sort_values(by="similarity", ascending=False).head(limit)
+
+    # Convert _id to string for JSON serialization
+    recommended_books["_id"] = recommended_books["_id"].astype(str)
+
     return recommended_books.drop(columns=["features", "similarity"]).to_dict(orient="records")
 
+
+# Flask route
 @app.route("/recommend", methods=["POST"])
 def recommend():
-    data = request.get_json()
-    user_history = data.get("history", [])
-    limit = data.get("limit")
-    recommendations = recommend_books(user_history,limit)
-    return jsonify({"recommendations": recommendations})
+    try:
+        data = request.get_json()
+        print("📩 Request received:", data)
+        user_history = data.get("history", [])
+        limit = int(data.get("limit", 5))  # default = 5
+        recommendations = recommend_books(user_history, limit)
+        return jsonify({"recommendations": recommendations})
+
+    except Exception as e:
+        print("❌ ERROR in /recommend:", e)
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(port=PORT)
+    app.run(port=PORT, debug=True)

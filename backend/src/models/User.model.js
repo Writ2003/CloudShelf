@@ -25,14 +25,18 @@ const userSchema = new mongoose.Schema({
     trim: true
   },
   history: [{
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: Book,
   }],
   userType: {
     type:String,
     enum:['Reader','Admin'],
     required:true
-  }
+  },
+  favouriteBooks: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref:Book
+  }]
 }, { timestamps: true });
 
 // Pre-save hook to hash the password before saving the user

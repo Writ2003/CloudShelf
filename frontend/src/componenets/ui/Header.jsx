@@ -66,7 +66,7 @@ const Header = () => {
         {searchQuery.length > 0 && showResults && <ul className="absolute border border-gray-400 top-10 bg-gray-100 w-full max-h-44 rounded-md px-2 overflow-auto no-scrollbar">
           {suggestions.length > 0 ? (suggestions.map((book,ind) => (
             <Link to={`/bookinfo/${book._id}`}>
-              <li key={book.id} 
+              <li key={book._id} 
                 className={`my-2 text-gray-700 font-serif pb-1 flex gap-2 text-sm tracking-wide ${ind===suggestions.length-1?'':'border-b'} cursor-pointer border-gray-400`}
                 onClick={() => {
                   setSearchQuery(book?.title);

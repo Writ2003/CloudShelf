@@ -17,7 +17,7 @@ const Card = () => {
         setLoading(true);
         const fetchData = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/book/getBooks?screenSize=${screenSize}`);
+                const response = await axios.get(`http://localhost:5000/api/book/recommendation?screenSize=${screenSize}`,{withCredentials: true});
                 console.log(response);
                 if(!response.data.success) console.error("Error: ", response.data.message);
                 setBooks(response.data.data);
