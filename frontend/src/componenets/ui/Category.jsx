@@ -65,7 +65,7 @@ const Category = () => {
     }
   return (
     <>
-        <div className='m-3 mt-6 bg-white p-3 rounded-xl'>
+        <div className='m-3 bg-white p-3 rounded-xl'>
             <div className='flex justify-between px-2'>
                 <p className='font-bold tracking-wide'>Categories</p>
             </div>

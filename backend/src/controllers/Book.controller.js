@@ -1,5 +1,7 @@
 import Book from "../models/Book.model.js";
 import User from "../models/User.model.js";
+import BookContent from "../models/BookContent.model.js";
+import redis from "../utils/redisClient.js"
 import axios from 'axios';
 
 const cardLimits = {
@@ -149,5 +151,31 @@ export const addToFavourite = async(req,res) => {
     return res.status(200).json({message: `Book ${ alreadyFavourite? 'removed from' : 'added to'} favourites`, success: true});
   } catch (error) {
     res.status(500).json({message: "Internal server error while adding to favourite"});
+  }
+}
+
+export const getBookContent = async(req,res) => {
+  const { bookId } = req.params;
+  const userId = req.user._id;
+  const { offset = 0, limit = 15 } = req.query;
+  try {
+    const cacheKey = `book:${bookId}:chunk:${offset}-${parseInt(offset) + parseInt(limit)}`;
+
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      console.log('📦 Served from Redis');
+      return res.status(200).json(JSON.parse(cached));
+    }
+    const book = await BookContent.findOne({ bookId });
+    const paginatedContent = book.content.slice(offset, offset + limit);
+    
+    data = {totalPages: book.totalPages, pages: paginatedContent};
+    await redis.set(cacheKey, JSON.stringify(data), 'EX', 3600);
+    res.status(200).json({
+      totalPages: book.totalPages,
+      pages: paginatedContent
+    });
+  } catch (error) {
+    res.status(500).json({message: "Internal server error while fetching book content"});
   }
 }

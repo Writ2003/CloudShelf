@@ -6,6 +6,7 @@ import BookInfo from './componenets/BookInfo'
 import Login from './componenets/Login'
 import Register from './componenets/Register'
 import ProtectedRoute from "./componenets/ProtectedRoutes";
+import ReadBook from './componenets/ReadBook'
 
 function App() {
 
@@ -18,6 +19,7 @@ function App() {
           <Route path='/' element={<Layout/>}>
             <Route index element={<Dashboard/>}/>
             <Route path='bookinfo/:bookid' element={<BookInfo/>}/>
+            <Route path='readbook/:bookid' element={<ReadBook/>}/>
           </Route>
         </Route>
       </Routes>

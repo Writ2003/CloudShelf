@@ -123,7 +123,14 @@ const BookInfo = () => {
                         </div>
                     </div>
                     <div className='w-72 flex gap-2 justify-center'>
-                        <button onClick={incrementReadCount} className='bg-blue-500 shadow-lg cursor-pointer text-white font-serif px-3 py-4 rounded-md mt-2 w-36 inline-flex gap-2 items-center justify-center'>Read Now <BookOpen width={20} height={20}/></button>
+                        <Link to={`/readbook/${bookid}`}>
+                            <button onClick={incrementReadCount} 
+                                className='bg-blue-500 shadow-lg cursor-pointer 
+                                text-white font-serif px-3 py-4 rounded-md mt-2 
+                                w-36 inline-flex gap-2 items-center justify-center'>Read Now 
+                                <BookOpen width={20} height={20}/>
+                            </button>
+                        </Link>
                          <IconButton 
                             onClick={() => {setIsFavorite(prev => !prev); addToFavourite()}}
                             sx={{

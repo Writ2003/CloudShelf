@@ -23,8 +23,8 @@ const PopularBook = () => {
         fetchData();
     },[]);
   return (
-    <div className='h-screen sticky  bg-blue-950 2xl:px-3 py-24'>
-        <div className='flex flex-col items-center gap-3 h-full'>
+    <div className='h-screen sticky top-0 bottom-0 bg-blue-950 2xl:px-3 py-24'>
+        <div className='flex flex-col items-center gap-3'>
             <div className='h-64 w-32 mb-3'>
                 {!loading && popularBook && <img src={popularBook?.coverImage} className='h-8/10 bg-gray-300 rounded-lg text-2xl flex justify-center items-center text-black'/>}
                 <div className='h-2/10 flex flex-col gap-2 items-center text-white text-sm mt-1'>
