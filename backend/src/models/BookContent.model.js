@@ -17,4 +17,5 @@ const BookContentSchema = new mongoose.Schema({
     content: [contentSchema]
 },{timestamps: true})
 
-export default BookContent = mongoose.model('BookContent',BookContentSchema);
+const BookContent = mongoose.model('BookContent',BookContentSchema);
+export default BookContent;

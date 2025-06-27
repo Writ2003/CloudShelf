@@ -25,4 +25,5 @@ const readingHistorySchema = new mongoose.Schema({
     roomName: String
 },{timestamps: true});
 
-export default ReadingHistory = mongoose.model('ReadingHistory',readingHistorySchema);
+const ReadingHistory = mongoose.model('ReadingHistory',readingHistorySchema);
+export default ReadingHistory;

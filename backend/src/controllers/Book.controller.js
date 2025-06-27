@@ -1,13 +1,34 @@
 import Book from "../models/Book.model.js";
 import User from "../models/User.model.js";
 import BookContent from "../models/BookContent.model.js";
-import redis from "../utils/redisClient.js"
+import redis from "../utils/redisClient.util.js"
+import { processPDF } from "../utils/extractPDF.util.js";
 import axios from 'axios';
 
 const cardLimits = {
     medium: 5, 
     large: 6, 
 };
+
+export const addNewBook = async(req,res) => {
+  try {
+    const {title, author, publisher, noOfPages, description, publicationDate, genre} = req.body;
+    const coverImage = req.file.path;
+    if([title,author,publisher,noOfPages,description,publicationDate,genre].some(field => field.length===0))
+      return res.status(400).json({message: 'Fill all the mandatory fields'});
+    if(!coverImage) return res.status(400).json({message: 'Fill all the mandatory fields'});
+    const book = await Book.findOne({
+      $and: {title,author,publisher}
+    });
+    if(book) return res.status(400).json({message: 'Book is already in database'});
+    const newBook = await Book.create({title,author,publisher,noOfPages,description,publicationDate,genre,coverImage});
+    if(!newBook) return res.status(400).json({message: "Book coudn't be created"});
+    return res.status(200).json({message: "Book added successfully!", newBook});
+  } catch (error) {
+    console.error('Error while adding a new book, error: ',error);
+    res.status(500).json({message: 'Internal server error while adding new book'})
+  }
+} 
 
 export const getPopularBook = async (req, res) => {
     try {
@@ -177,5 +198,47 @@ export const getBookContent = async(req,res) => {
     });
   } catch (error) {
     res.status(500).json({message: "Internal server error while fetching book content"});
+  }
+}
+
+export const uploadBookContent = async(req,res) => {
+  const { bookId } = req.params;
+  const filePath = req.file.path; // multer must be configured
+    if (!filePath) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+  try {
+    // Extract HTML pages from the PDF
+    const htmlPages = await processPDF(filePath);
+
+    if (!htmlPages || htmlPages.length === 0) {
+      return res.status(400).json({ message: "No content extracted from PDF" });
+    }
+
+    // Format pages for DB
+    const contentArray = htmlPages.map((html, index) => ({
+      page: index + 1,
+      html
+    }));
+
+    // Upsert: replace if already exists for this book
+    const existing = await BookContent.findOne({ bookId });
+    if (existing) {
+      await BookContent.updateOne(
+        { bookId },
+        { $set: { content: contentArray, totalPages: htmlPages.length } }
+      );
+    } else {
+      await BookContent.create({
+        bookId,
+        totalPages: htmlPages.length,
+        content: contentArray
+      });
+    }
+
+    res.status(200).json({ message: "Book content uploaded successfully", totalPages: htmlPages.length });
+  } catch (error) {
+    console.error('❌ Error uploading book content:', error);
+    res.status(500).json({ message: "Internal server error while uploading book content" });
   }
 }

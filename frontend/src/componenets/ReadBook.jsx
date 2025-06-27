@@ -8,6 +8,8 @@ import RecordVoiceOverRoundedIcon from '@mui/icons-material/RecordVoiceOverRound
 import VoiceOverOffRoundedIcon from '@mui/icons-material/VoiceOverOffRounded';
 import TintSelector from './ui/TintSelector'
 import { useParams } from 'react-router-dom'
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 
 const tintClasses = {
   default: "bg-white text-black",
@@ -22,9 +24,22 @@ const ReadBook = () => {
     const [isTextToSpeechActive, setIsTextToSpeechActive] = useState(false);
     const [tint, setTint] = useState("default");
     const { bookid } = useParams();
-    const [totalPages, setTotalPages] = useState(0);
-    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(5);
+    const [currentPage, setCurrentPage] = useState(1);
     const [pageContents, setPageContents] = useState([]);
+
+    const getPreviousPage = () => {
+        if(currentPage > 1) {
+            let previous = currentPage - 1;
+            setCurrentPage(previous);
+        }
+    }
+    const getNextPage = () => {
+        if(currentPage < totalPages) {
+            let next = currentPage + 1;
+            setCurrentPage(next);
+        }
+    }
 
     useEffect(() => {
         const fetchBook = async() => {
@@ -39,10 +54,26 @@ const ReadBook = () => {
   return (
     <div className='h-screen flex flex-col'>
         <div className='w-full h-12 bg-gray-200 grid grid-cols-3 gap-3 px-12'>
-            <div className='col-start-2 col-end-3'>
-
+            <div className='col-start-1 col-end-2 content-center'>
+                <p className='font-bold tracking-wider truncate font-mono'>{bookid}</p>
             </div>
-            <div className='col-start-3 flex flex-row-reverse'>
+            <div className='grid grid-cols-3 items-center gap-2 justify-center'>
+                <div className='flex justify-end'>
+                    {currentPage > 1 && <IconButton onClick={getPreviousPage}>
+                        <KeyboardArrowLeftIcon/>
+                    </IconButton>}
+                </div>
+                <div className='flex gap-1.5 justify-center items-center'>
+                    <input type="number" value={currentPage} className='w-12 text-center bg-white rounded-md p-1 outline-none text-[14px] font-semibold tracking-wide'/>
+                    <p>of <span className='text-[14px] font-semibold tracking-wide'>{totalPages}</span></p>
+                </div>
+                <div>
+                    {currentPage < totalPages && <IconButton onClick={getNextPage}>
+                        <KeyboardArrowRightIcon/>
+                    </IconButton>}
+                </div>
+            </div>
+            <div className='col-start-3 flex flex-row-reverse h-12'>
                 <Tooltip title='Bookmark'>
                     <IconButton sx={{
                         borderRadius:"50%",
@@ -82,7 +113,7 @@ const ReadBook = () => {
                 <TintSelector onTintChange={setTint}/>
             </div>
         </div>
-        <div className={`flex-1 flex justify-center items-center transition-all duration-300 ${tintClasses[tint]}`}>
+        <div className={`flex-1 flex justify-center items-center transition-all duration-300 overflow-y-auto no-scrollbar ${tintClasses[tint]}`}>
             Hello
         </div>
     </div>
