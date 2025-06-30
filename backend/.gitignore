@@ -2,3 +2,4 @@
 *.env.*
 .env.*
 node_modules
+cloudshelf-tts-config.json

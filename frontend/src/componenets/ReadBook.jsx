@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { Tooltip, IconButton } from '@mui/material';
 import BookmarkAddOutlinedIcon from '@mui/icons-material/BookmarkAddOutlined';
@@ -13,7 +13,7 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import RemoveRoundedIcon from '@mui/icons-material/RemoveRounded';
 import BorderColorRoundedIcon from '@mui/icons-material/BorderColorRounded';
-
+import axios from 'axios';
 
 const tintClasses = {
   default: "bg-white text-black",
@@ -41,6 +41,7 @@ const ReadBook = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [displayHTML, setDisplayHTML] = useState('');
     const [textSize, setTextSize] = useState('base');
+    const audioRef = useRef(null); 
 
     const increaseTextSize = () => {
       const index = fontSizes.indexOf(textSize);
@@ -111,26 +112,62 @@ const ReadBook = () => {
           //setDisplayHTML(htmlContent); // fallback from backend
         }
     }, [bookid, currentPage, /*htmlContent*/]);
+    const playTextToSpeech = async (text) => {
+      try {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+        const response = await axios.post(
+          'http://localhost:5000/api/tts/convertToAudio', // your backend route
+          { text },
+          { responseType: 'blob', withCredentials: true } // important: expect audio blob
+        );
+      
+        const blob = new Blob([response.data], { type: 'audio/mpeg' });
+        const url = URL.createObjectURL(blob);
+      
+        const audio = new Audio(url);
+        audioRef.current = audio;
 
+        audio.play();
+      } catch (err) {
+        console.error('Playback failed:', err);
+      }
+    };
+    const getPlainText = (html) => {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      return temp.textContent || temp.innerText || '';
+    };
     useEffect(() => {
-        const handleKeyDown = (e) => {
-            // Prevent navigation if user is typing in an input or textarea
-            const activeTag = document.activeElement.tagName.toLowerCase();
-            if (activeTag === 'input' || activeTag === 'textarea') {
-              return;
-            }
-
-            if (e.key === 'ArrowLeft') {
-              getPreviousPage(); // custom function to go back
-            } else if (e.key === 'ArrowRight') {
-              getNextPage(); // custom function to go forward
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
+      if (isTextToSpeechActive) {
+        const text = getPlainText(pages[currentPage]?.html || '');
+        if (text) playTextToSpeech(text);
+      } else {
+         if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      }
+    }, [isTextToSpeechActive, currentPage]);
+    useEffect(() => {
+      const handleKeyDown = (e) => {
+        // Prevent navigation if user is typing in an input or textarea
+        const activeTag = document.activeElement.tagName.toLowerCase();
+        if (activeTag === 'input' || activeTag === 'textarea') {
+          return;
+        }
+        if (e.key === 'ArrowLeft') {
+          getPreviousPage(); // custom function to go back
+        } else if (e.key === 'ArrowRight') {
+          getNextPage(); // custom function to go forward
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     }, [currentPage, getNextPage, getPreviousPage]);
 
   return (
