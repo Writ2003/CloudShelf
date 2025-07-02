@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import Book from './Book.model.js';
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -26,7 +25,7 @@ const userSchema = new mongoose.Schema({
   },
   history: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: Book,
+    ref: 'Book',
   }],
   userType: {
     type:String,
@@ -35,7 +34,7 @@ const userSchema = new mongoose.Schema({
   },
   favouriteBooks: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref:Book
+    ref: 'Book'
   }]
 }, { timestamps: true });
 
