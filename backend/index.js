@@ -24,6 +24,7 @@ import protectedRoutes from "./src/routes/protected.routes.js"
 import searchRoutes from "./src/routes/Search.routes.js"
 import TextToSpeectRoutes from "./src/routes/TTS.routes.js"
 import ReviewRoutes from "./src/routes/Review.routes.js"
+import ReplyRoutes from "./src/routes/Reply.routes.js"
 
 // Default route
 app.get('/', (req, res) => {
@@ -36,6 +37,7 @@ app.use('/api/protectedRoute',protectedRoutes);
 app.use("/api/search",searchRoutes);
 app.use("/api/tts",TextToSpeectRoutes);
 app.use("/api/review", ReviewRoutes);
+app.use("/api/reply", ReplyRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;

@@ -1,6 +1,5 @@
 import Review from "../models/Review.model";
-import Book from "../models/Book.model";
-import User from "../models/User.model";
+import dayjs from "../utils/Dayjs.util.js";
 
 export const addReview = async (req, res) => {
   const { bookId } = req.params;
@@ -92,11 +91,19 @@ export const fetchAllReviews = async (req, res) => {
   try {
     const totalReviews = await Review.countDocuments({ bookId });
 
-    const reviews = await Review.find({ bookId })
+    const rawReviews = await Review.find({ bookId })
       .populate('user', 'name email')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
+
+    const reviews = rawReviews.map(review => ({
+      _id: review._id,
+      user: review.user,
+      comment: review.comment,
+      createdAt: dayjs(review.createdAt).fromNow(),
+      updatedAt: dayjs(review.updatedAt).fromNow(),
+    }));
 
     res.status(200).json({
       reviews,
