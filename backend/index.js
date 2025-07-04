@@ -3,12 +3,26 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import http from 'http';
+import { Server } from 'socket.io';
 
 import './src/cron/resetWeeklyReaders.js';
+import initDiscussionSocket from './src/sockets/discussion.socket.js';
+
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
 
+const discussionNamespace = io.of("/discussion");
+initDiscussionSocket(discussionNamespace);
 // Middleware
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -25,6 +39,8 @@ import searchRoutes from "./src/routes/Search.routes.js"
 import TextToSpeectRoutes from "./src/routes/TTS.routes.js"
 import ReviewRoutes from "./src/routes/Review.routes.js"
 import ReplyRoutes from "./src/routes/Reply.routes.js"
+import TopicRoutes from "./src/routes/Topic.route.js"
+import DiscussionMessagesRoutes from "./src/routes/DiscussionMessages.route.js";
 
 // Default route
 app.get('/', (req, res) => {
@@ -38,6 +54,8 @@ app.use("/api/search",searchRoutes);
 app.use("/api/tts",TextToSpeectRoutes);
 app.use("/api/review", ReviewRoutes);
 app.use("/api/reply", ReplyRoutes);
+app.use("/api/topic", TopicRoutes);
+app.use("/api/discussionMessages", DiscussionMessagesRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
