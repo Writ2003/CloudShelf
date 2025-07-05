@@ -242,57 +242,66 @@ const ReadBook = () => {
         <div
           className={`flex-1 flex justify-center items-center px-4 sm:px-12 overflow-y-auto no-scrollbar transition-all duration-300`}
         >
-            <div
-              className={`prose max-w-none p-6 sm:p-8 shadow-md rounded-md transition-all duration-300 ease-in-out
-                        ${textSize === 'sm' ? 'text-sm lg:w-[75%]' : ''}
-                        ${textSize === 'base' ? 'text-base lg:w-[70%]' : ''}
-                        ${textSize === 'lg' ? 'text-lg lg:w-[60%]' : ''}
-                        ${textSize === 'xl' ? 'text-xl lg:w-[50%]' : ''}
-                        ${tint === 'dark' ? 'prose-invert' : ''}
-                        ${tintClasses[tint]}
-                    `}   
-            >
-              {/* Book content goes here */}
-              {/*displayHTML && (
-                <div id="page-content" dangerouslySetInnerHTML={{ __html: displayHTML }} />
-              )*/}
-            </div>
+          <div
+            className={`prose max-w-none p-6 sm:p-8 shadow-md rounded-md transition-all duration-300 ease-in-out
+                      ${textSize === 'sm' ? 'text-sm lg:w-[75%]' : ''}
+                      ${textSize === 'base' ? 'text-base lg:w-[70%]' : ''}
+                      ${textSize === 'lg' ? 'text-lg lg:w-[60%]' : ''}
+                      ${textSize === 'xl' ? 'text-xl lg:w-[50%]' : ''}
+                      ${tint === 'dark' ? 'prose-invert' : ''}
+                      ${tintClasses[tint]}
+                  `}   
+          >
+            {/* Book content goes here */}
+            {/*displayHTML && (
+              <div id="page-content" dangerouslySetInnerHTML={{ __html: displayHTML }} />
+            )*/}
+          </div>
         </div>
+        {isCoupleModeActive && (
+          <CouplePanel
+            bookId={bookid}
+            onJoin={(finalCoupleId) => {
+              socket.emit("join_couple_room", { bookid, coupleId: finalCoupleId });
+              setCoupleId(finalCoupleId);
+            }}
+          />
+        )}
         <div className="fixed bottom-44 right-6 z-50">
-            <Tooltip title="Highlight Selection" placement='top-start' arrow>
-                <IconButton
-                  onClick={applyHighlight}
-                  sx={{
-                    backgroundColor: '#fff59d',
-                    '&:hover': { backgroundColor: '#fce87c' },
-                    width: '40px',
-                    height: '40px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                  }}
-                >
-                  <BorderColorRoundedIcon sx={{ color: '#333' }} />
-                </IconButton>
-            </Tooltip>
+          <Tooltip title="Highlight Selection" placement='top-start' arrow>
+              <IconButton
+                onClick={applyHighlight}
+                sx={{
+                  backgroundColor: '#fff59d',
+                  '&:hover': { backgroundColor: '#fce87c' },
+                  width: '40px',
+                  height: '40px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                }}
+              >
+                <BorderColorRoundedIcon sx={{ color: '#333' }} />
+              </IconButton>
+          </Tooltip>
         </div>
 
         <div className="fixed bottom-16 right-4 z-50">
-            <div className="flex flex-col-reverse items-center gap-1 border rounded-md px-2 py-1 bg-white shadow-md">
-              <IconButton
-                size="small"
-                onClick={decreaseTextSize}
-                disabled={textSize === 'sm'}
-              >
-                <RemoveRoundedIcon fontSize="small" />
-              </IconButton>
-              <p className="text-xs font-semibold w-8 text-center capitalize">{fontSizeLabels[textSize]}</p>
-              <IconButton
-                size="small"
-                onClick={increaseTextSize}
-                disabled={textSize === 'xl'}
-              >
-                <AddRoundedIcon fontSize="small" />
-              </IconButton>
-            </div>
+          <div className="flex flex-col-reverse items-center gap-1 border rounded-md px-2 py-1 bg-white shadow-md">
+            <IconButton
+              size="small"
+              onClick={decreaseTextSize}
+              disabled={textSize === 'sm'}
+            >
+              <RemoveRoundedIcon fontSize="small" />
+            </IconButton>
+            <p className="text-xs font-semibold w-8 text-center capitalize">{fontSizeLabels[textSize]}</p>
+            <IconButton
+              size="small"
+              onClick={increaseTextSize}
+              disabled={textSize === 'xl'}
+            >
+              <AddRoundedIcon fontSize="small" />
+            </IconButton>
+          </div>
         </div>
     </div>
   )
