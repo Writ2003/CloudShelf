@@ -1,5 +1,5 @@
 import DiscussionMessage from '../models/DiscussionMessage.model.js';
-import dayjs from '../utils/dayjs.js';
+import dayjs from '../utils/dayjs.util.js';
 
 export default (io) => {
   io.on('connection', (socket) => {

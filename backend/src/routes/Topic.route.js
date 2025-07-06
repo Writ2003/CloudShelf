@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import verifyToken from '../middlewares/verifyJWT';
+import verifyToken from '../middlewares/verifyJWT.js';
 import { createTopic, getTopics, getTopicById } from '../controllers/Topic.controller.js';
 
 const router = Router();

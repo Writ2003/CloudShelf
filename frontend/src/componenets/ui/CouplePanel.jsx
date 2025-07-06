@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import { Copy, LinkIcon, RefreshCcw } from 'lucide-react'; // or MUI icons if you prefer
-import { Button } from "@/components/ui/button";
+import { Button } from "./Button";
 
 export default function CouplePanel({ bookId, onJoin }) {
   const [coupleId, setCoupleId] = useState('');
@@ -13,8 +13,7 @@ export default function CouplePanel({ bookId, onJoin }) {
   }, []);
 
   const handleCopy = () => {
-    const link = `${window.location.origin}/read/${bookId}?coupleId=${coupleId}`;
-    navigator.clipboard.writeText(link);
+    navigator.clipboard.writeText(coupleId);
   };
 
   const handleJoinWithInput = () => {
@@ -24,7 +23,7 @@ export default function CouplePanel({ bookId, onJoin }) {
   };
 
   return (
-    <div className="absolute top-0 right-0 w-80 h-full bg-white shadow-lg z-50 p-4 flex flex-col gap-4 transition-all">
+    <div className="sticky top-0 right-0 w-64 h-full bg-white shadow-lg z-50 p-4 flex flex-col gap-4 transition-all">
       <h2 className="text-xl font-semibold">Couple Mode</h2>
 
       <div className="bg-gray-100 rounded-md p-3 flex items-center justify-between">

@@ -14,6 +14,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import RemoveRoundedIcon from '@mui/icons-material/RemoveRounded';
 import BorderColorRoundedIcon from '@mui/icons-material/BorderColorRounded';
 import axios from 'axios';
+import CouplePanel from './ui/CouplePanel'
 
 const tintClasses = {
   default: "bg-white text-black",
@@ -240,10 +241,10 @@ const ReadBook = () => {
 
         {/* Book Content Display */}
         <div
-          className={`flex-1 flex justify-center items-center px-4 sm:px-12 overflow-y-auto no-scrollbar transition-all duration-300`}
+          className={`flex-1 flex justify-center items-center pl-6 sm:pl-8 overflow-y-auto no-scrollbar transition-all duration-300`}
         >
           <div
-            className={`prose max-w-none p-6 sm:p-8 shadow-md rounded-md transition-all duration-300 ease-in-out
+            className={`prose max-w-none mx-auto p-6 sm:p-8 shadow-md rounded-md transition-all duration-300 ease-in-out
                       ${textSize === 'sm' ? 'text-sm lg:w-[75%]' : ''}
                       ${textSize === 'base' ? 'text-base lg:w-[70%]' : ''}
                       ${textSize === 'lg' ? 'text-lg lg:w-[60%]' : ''}
@@ -257,8 +258,7 @@ const ReadBook = () => {
               <div id="page-content" dangerouslySetInnerHTML={{ __html: displayHTML }} />
             )*/}
           </div>
-        </div>
-        {isCoupleModeActive && (
+          {isCoupleModeActive && (
           <CouplePanel
             bookId={bookid}
             onJoin={(finalCoupleId) => {
@@ -267,6 +267,7 @@ const ReadBook = () => {
             }}
           />
         )}
+        </div>
         <div className="fixed bottom-44 right-6 z-50">
           <Tooltip title="Highlight Selection" placement='top-start' arrow>
               <IconButton

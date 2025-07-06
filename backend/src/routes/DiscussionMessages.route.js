@@ -1,7 +1,7 @@
 // routes/discussionMessageRoutes.js
 import { Router } from 'express';
 import { getMessagesByTopic } from '../controllers/Discussion.controller.js';
-import { verifyToken } from '../middlewares/verifyJWT.js';
+import  verifyToken  from '../middlewares/verifyJWT.js';
 
 const router = Router();
 
