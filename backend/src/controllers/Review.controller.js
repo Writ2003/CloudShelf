@@ -6,8 +6,8 @@ export const addReview = async (req, res) => {
   const { comment, rating } = req.body;
   const userId = req.user?._id;
 
-  if (!comment || !rating) {
-    return res.status(400).json({ message: 'Comment and rating are required.' });
+  if (!comment && !rating) {
+    return res.status(400).json({ message: 'Comment or rating is required.' });
   }
 
   try {
@@ -16,14 +16,18 @@ export const addReview = async (req, res) => {
     if (existing) {
       return res.status(400).json({ message: 'You have already reviewed this book.' });
     }
-
-    const review = new Review({
+    let review;
+    if(!comment) 
+    review = new Review({
       user: userId,
       bookId,
-      comment,
       rating,
     });
-
+    else review = new Review({
+      user: userId,
+      bookId,
+      comment
+    });
     await review.save();
 
     res.status(201).json({ message: 'Review added successfully.', review });

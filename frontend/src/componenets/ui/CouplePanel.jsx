@@ -6,15 +6,23 @@ import { Button } from "./Button";
 export default function CouplePanel({ bookId, onJoin }) {
   const [coupleId, setCoupleId] = useState('');
   const [inputId, setInputId] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const generated = nanoid(6);
     setCoupleId(generated);
   }, []);
 
-  const handleCopy = () => {
+  const handleCopyCoupleId = () => {
     navigator.clipboard.writeText(coupleId);
   };
+
+  const handleCopyLink = () => {
+    const link = `${window.location.origin}/read/${bookId}?coupleId=${coupleId}`;
+    navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500); // Hide after 1.5s
+  }
 
   const handleJoinWithInput = () => {
     if (inputId.trim()) {
@@ -28,16 +36,22 @@ export default function CouplePanel({ bookId, onJoin }) {
 
       <div className="bg-gray-100 rounded-md p-3 flex items-center justify-between">
         <span className="font-mono text-lg">{coupleId}</span>
-        <Button variant="ghost" onClick={handleCopy}>
+        <Button variant="ghost" onClick={handleCopyCoupleId}>
           <Copy className="w-4 h-4" />
         </Button>
       </div>
 
-      <div className="text-sm text-gray-500">
-        Share this link: <br />
-        <code className="break-all text-blue-600 underline">
+      <div className="text-sm text-gray-500 w-full p-4">
+        <p className="font-medium mb-2">Share this link:</p>
+        <button className='relative break-words break-all whitespace-normal text-sm font-normal cursor-pointer text-blue-500 underline' onClick={handleCopyLink}>
           {window.location.origin}/read/{bookId}?coupleId={coupleId}
-        </code>
+          {/* Tooltip */}
+          {copied && (
+            <div className="absolute translate-x-full bg-black text-white text-xs rounded p-2 shadow-md">
+              Copied!
+            </div>
+          )}
+        </button>
       </div>
 
       <Button

@@ -27,9 +27,11 @@ const BookInfo = () => {
     const [bookInfo, setBookInfo] = useState({});
     const [loading, setLoading] = useState(true);
     const [isFavorite, setIsFavorite] = useState(false);
-    const [value, setValue] = useState(0);
+    const [rating, setRating] = useState(0);
     const [hover, setHover] = useState(-1);
-    const [userReview, setUserReview] = useState("");
+    const [userReview, setUserReview] = useState('');
+    const [isReviewPosted, setIsReviewPosted] = useState(false);
+    const [isRatingPosted, setIsRatingPosted] = useState(false);
     const textareaRef = useRef(null);
     const [createDiscussion,setCreateDiscussion] = useState(false);
     const { user } = useAuth();
@@ -51,6 +53,8 @@ const BookInfo = () => {
                 console.log(response.data)
                 setBookInfo(response.data.book)
                 setIsFavorite(response.data.isFavourite);
+                if(response.data.rating > 0) isRatingPosted(true);
+                if(response.data.review !== '') isReviewPosted(true);
             } catch (error) {
                 console.error("Error: ",error);
             } finally {
@@ -71,9 +75,28 @@ const BookInfo = () => {
           textarea.style.height = 'auto'; // Reset height
           textarea.style.height = `${textarea.scrollHeight}px`; // Set to content height
         }
-    },[value])
-    const saveReview = async(e) => {
-        e.preventDefault();
+    },[userReview])
+    useEffect (() => {
+        const saveRating = async() => {
+            try {
+                const response = !isReviewPosted? await axios.post(`http://localhost:5000/api/review/addReview/${bookid}`,{rating},{withCredentials: true}): await axios.patch(`http://localhost:5000/api/review/updateReview/${bookid}`,{rating, comment: userReview},{withCredentials: true});
+                console.log(response.data);
+                setIsRatingPosted(true);
+            } catch (error) {
+                console.log('Error while posting rating: , ',error);
+            }
+        }
+        saveRating();
+    },[rating]);
+    const saveReview = async() => {
+        try {
+            const response = !isRatingPosted? await axios.post(`http://localhost:5000/api/review/addReview/${bookid}`,{comment: userReview},{withCredentials: true}): 
+            await axios.patch(`http://localhost:5000/api/review/updateReview/${bookid}`,{rating, comment: userReview},{withCredentials: true});
+            console.log(response.data);
+            setIsReviewPosted(true);
+        } catch (error) {
+            console.log('Error while posting review, ',error);
+        }
     }
     const handleSetCreateDiscussion = (e = null) => {
         if(e) e.preventDefault();
@@ -207,18 +230,18 @@ const BookInfo = () => {
                     <Box sx={{ minWidth: 200, display: 'flex', alignItems: 'center' }}>
                         <Rating
                             name="hover-feedback"
-                            value={value}
+                            value={rating}
                             getLabelText={getLabelText}
                             onChange={(event, newValue) => {
-                              setValue(newValue);
+                              setRating(newValue);
                             }}
                             onChangeActive={(event, newHover) => {
                               setHover(newHover);
                             }}
                             emptyIcon={<StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />}
                         />
-                        {value !== null && (
-                            <Box sx={{ ml: 1, display:'flex', justifyContent:'center', textAlign:'center', textWrap:'nowrap', minWidth:100 }}>{label[hover !== -1 ? hover : value]}</Box>
+                        {rating !== null && (
+                            <Box sx={{ ml: 1, display:'flex', justifyContent:'center', textAlign:'center', textWrap:'nowrap', minWidth:100 }}>{label[hover !== -1 ? hover : rating]}</Box>
                         )}
                     </Box>
                 </div>
