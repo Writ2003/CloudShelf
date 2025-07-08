@@ -147,7 +147,7 @@ export const getBookInfo = async(req,res) => {
   try {
     const {bookId} = req.params;
     if(!bookId) res.status(404).json({message:"BookId not found!"});
-    const book = await Book.findOne({_id:bookId});
+    const book = await Book.findOne({_id:bookId}).select('-reviews');
     if(!book) res.status(404).json({message:"No such book found!"});
     const isFavourite = req.user.favouriteBooks.some(book => String(book._id)===bookId);
     return res.status(200).json({book,isFavourite});

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 import { useEffect, useState, useRef, createContext } from 'react'
 import { useParams } from 'react-router-dom'
 import {BookHeart, BookOpen, SendHorizonal} from 'lucide-react'
@@ -34,6 +34,9 @@ const BookInfo = () => {
     const [isRatingPosted, setIsRatingPosted] = useState(false);
     const textareaRef = useRef(null);
     const [createDiscussion,setCreateDiscussion] = useState(false);
+    const [commentsLoading, setCommentsLoading] = useState(true);
+    const [comments, setComments] = useState([]);
+    const [commentInfo, setCommentInfo] = useState({page: 0, totalPages: 0, totalComments: 0});
     const { user } = useAuth();
 
     const colors = [
@@ -53,15 +56,44 @@ const BookInfo = () => {
                 console.log(response.data)
                 setBookInfo(response.data.book)
                 setIsFavorite(response.data.isFavourite);
-                if(response.data.rating > 0) isRatingPosted(true);
-                if(response.data.review !== '') isReviewPosted(true);
             } catch (error) {
                 console.error("Error: ",error);
+            }
+        }
+        const fetchUserReviewInfo = async() => {
+            try {
+                const response = await axios.get(`http://localhost:5000/api/review/fetchReview/${bookid}`,{withCredentials: true});
+                console.log(response.data.review);
+                if(response.data.review?.comment !== '') {
+                    setUserReview(response.data.review.comment);
+                    setIsReviewPosted(true);
+                }
+                if(response.data.review?.rating > 0) {
+                    setRating(response.data.review.rating);
+                    setIsRatingPosted(true);
+                }
+            } catch (error) {
+                console.error('Error while fetching user review, error: ',error);
             } finally {
                 setLoading(false);
             }
         }
+        const fetchComments = async() => {
+            setCommentsLoading(true);
+            try {
+               const response = await axios.get(`http://localhost:5000/api/review/allReviews/${bookid}?page=${commentInfo.page+1}&limit=${15}`,{withCredentials: true});
+               console.log('Comments: ',response.data.reviews);
+               if(response.data?.reviews) setComments(response.data.reviews);
+               setCommentInfo({page: response.data.currentPage, totalComments: response.data.totalReviews, totalPages: response.data.totalPages});
+            } catch (error) {
+                console.error('Error while fetching comments, error: ',error);
+            } finally {
+                setCommentsLoading(false);
+            }
+        }
         fetchBookInfo();
+        fetchUserReviewInfo();
+        fetchComments();
     },[bookid])
     const capitalizeWords = (str) => {
         return str.toLowerCase().split(' ').map(function(word) {
@@ -76,18 +108,15 @@ const BookInfo = () => {
           textarea.style.height = `${textarea.scrollHeight}px`; // Set to content height
         }
     },[userReview])
-    useEffect (() => {
-        const saveRating = async() => {
-            try {
-                const response = !isReviewPosted? await axios.post(`http://localhost:5000/api/review/addReview/${bookid}`,{rating},{withCredentials: true}): await axios.patch(`http://localhost:5000/api/review/updateReview/${bookid}`,{rating, comment: userReview},{withCredentials: true});
-                console.log(response.data);
-                setIsRatingPosted(true);
-            } catch (error) {
-                console.log('Error while posting rating: , ',error);
-            }
+    const saveRating = async(newValue) => {
+        try {
+            const response = !isReviewPosted? await axios.post(`http://localhost:5000/api/review/addReview/${bookid}`,{rating: newValue*2},{withCredentials: true}): await axios.patch(`http://localhost:5000/api/review/updateReview/${bookid}`,{rating: newValue*2, comment: userReview},{withCredentials: true});
+            console.log(response.data);
+            setIsRatingPosted(true);
+        } catch (error) {
+            console.log('Error while posting rating: , ',error);
         }
-        saveRating();
-    },[rating]);
+    }
     const saveReview = async() => {
         try {
             const response = !isRatingPosted? await axios.post(`http://localhost:5000/api/review/addReview/${bookid}`,{comment: userReview},{withCredentials: true}): 
@@ -234,6 +263,7 @@ const BookInfo = () => {
                             getLabelText={getLabelText}
                             onChange={(event, newValue) => {
                               setRating(newValue);
+                              saveRating(newValue);
                             }}
                             onChangeActive={(event, newHover) => {
                               setHover(newHover);
@@ -251,13 +281,13 @@ const BookInfo = () => {
                 </div>
                 <p className='text-xl font-semibold tracking-wide mx-3 my-6 border-b border-gray-400 pb-3'>User Reviews</p>
                 <div className='mx-3'>
-                    {Array.from({length:6},(ele,ind) =>(<div key={ind} className='w-full my-6'>
+                    {!commentsLoading && comments.map( (comment,ind) =>(<div key={comment._id} className='w-full my-6'>
                         <div className='flex items-center gap-3'>
                             <img src={minion} alt="minion.png" height={26} width={26} className={`rounded-full ring ${colors[ind%6].split(' ')[0]} ring-offset-2`}/>
-                            <p className={`text-[12px] tracking-wide font-medium shadow-md bg-gradient-to-br ${colors[ind%6].split(' ')[1]} ${colors[ind%6].split(' ')[2]} p-1 rounded-lg text-white`}>Supratim Das</p>
+                            <p className={`text-[12px] tracking-wide font-medium shadow-md bg-gradient-to-br ${colors[ind%6].split(' ')[1]} ${colors[ind%6].split(' ')[2]} p-1 rounded-lg text-white`}>{comment?.user}</p>
                         </div>
                         <div className="my-1.5">
-                            <ExpandableInlineText key={2} text="Just finished The Night Circus and wow... it’s like reading a dream. The writing is so visual and poetic, I felt like I was actually walking through the circus. The love story was subtle but beautiful, and the whole atmosphere was pure magic. Definitely one of those books that stays with you. 10/10 recommend if you love fantasy with a slow burn vibe. ✨📖🎪 another few line here and there, i need to write more line to check if it's working properly or not" />
+                            <ExpandableInlineText key={2} text={comment?.text}/>
                         </div>
                     </div>))}
                 </div>

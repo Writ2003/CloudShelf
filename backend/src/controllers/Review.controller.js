@@ -43,12 +43,12 @@ export const fetchReview = async (req, res) => {
 
   try {
     const review = await Review.findOne({ bookId, user: userId });
-
+    console.log('Review: ',review);
     if (!review) {
       return res.status(404).json({ message: 'No review found for this book by the user.' });
     }
 
-    res.status(200).json({ review });
+    return res.status(200).json({ review });
   } catch (err) {
     console.error('[Fetch Review Error]', err);
     res.status(500).json({ message: 'Internal server error.' });
@@ -101,14 +101,16 @@ export const fetchAllReviews = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
+      console.log(rawReviews);
+
     const reviews = rawReviews.map(review => ({
       _id: review._id,
-      user: review.user,
-      comment: review.comment,
+      user: review.user.name || review.user.email,
+      text: review.comment,
       createdAt: dayjs(review.createdAt).fromNow(),
       updatedAt: dayjs(review.updatedAt).fromNow(),
     }));
-
+    
     res.status(200).json({
       reviews,
       totalReviews,
