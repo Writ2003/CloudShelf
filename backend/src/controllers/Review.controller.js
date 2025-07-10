@@ -1,5 +1,7 @@
 import Review from "../models/Review.model.js";
-import dayjs from "../utils/Dayjs.util.js"
+import LikeComments from "../models/LikeComments.model.js";
+import Reply from "../models/Reply.model.js";
+import Dayjs from "../utils/Dayjs.util.js";
 
 export const addReview = async (req, res) => {
   const { bookId } = req.params;
@@ -89,7 +91,7 @@ export const fetchAllReviews = async (req, res) => {
   const { bookId } = req.params;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
-
+  const userId = req.user._id;
   const skip = (page - 1) * limit;
 
   try {
@@ -101,15 +103,53 @@ export const fetchAllReviews = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-      console.log(rawReviews);
+    console.log(rawReviews);
 
-    const reviews = rawReviews.map(review => ({
-      _id: review._id,
-      user: review.user.name || review.user.email,
-      text: review.comment,
-      createdAt: dayjs(review.createdAt).fromNow(),
-      updatedAt: dayjs(review.updatedAt).fromNow(),
-    }));
+    const likeDocs = await LikeComments.find({
+      commentId: { $in: rawReviews.map((r) => r._id) },
+    });
+
+    const likeDocMap = new Map(
+      likeDocs.map((doc) => [doc.commentId.toString(), doc])
+    );
+
+// === REPLY HANDLING ===
+    const replyCounts = await Reply.aggregate([
+      {
+        $match: {
+          reviewId: { $in: rawReviews.map((r) => r._id) }
+        }
+      },
+      {
+        $group: {
+          _id: '$reviewId',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const replyCountMap = new Map(
+      replyCounts.map(rc => [rc._id.toString(), rc.count])
+    );
+
+// === FINAL MAPPING ===
+    const reviews = rawReviews.map((review) => {
+      const reviewIdStr = review._id.toString();
+    
+      const likeDoc = likeDocMap.get(reviewIdStr);
+      const likedByArray = likeDoc?.likedBy || [];
+    
+      return {
+        _id: review._id,
+        user: review.user.name || review.user.email,
+        text: review.comment,
+        createdAt: Dayjs(review.createdAt).fromNow(),
+        updatedAt: Dayjs(review.updatedAt).fromNow(),
+        isLiked: likedByArray.includes(userId),
+        likeCount: likedByArray.length || 0,
+        noOfReplies: replyCountMap.get(reviewIdStr) || 0
+      };
+    });
     
     res.status(200).json({
       reviews,

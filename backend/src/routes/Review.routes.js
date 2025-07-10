@@ -8,6 +8,6 @@ router.post('/addReview/:bookId', verifyToken, addReview)
 router.get('/fetchReview/:bookId', verifyToken, fetchReview);
 router.patch('/updateReview/:bookId', verifyToken, updateReview);
 router.delete('/deleteReview/:bookId', verifyToken, deleteReview);
-router.get('/allReviews/:bookId', fetchAllReviews);
+router.get('/allReviews/:bookId', verifyToken, fetchAllReviews);
 
 export default router;

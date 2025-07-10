@@ -13,6 +13,10 @@ import useAuth from '../hooks/useAuth';
 import IconButton from '@mui/material/IconButton';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
+import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
+import ReplyOutlinedIcon from '@mui/icons-material/ReplyOutlined'
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 export const DiscussionContext = createContext();
 export const DiscussionContextProvider = DiscussionContext.Provider;
@@ -94,6 +98,7 @@ const BookInfo = () => {
         fetchBookInfo();
         fetchUserReviewInfo();
         fetchComments();
+        console.log('user: ',user)
     },[bookid])
     const capitalizeWords = (str) => {
         return str.toLowerCase().split(' ').map(function(word) {
@@ -147,6 +152,34 @@ const BookInfo = () => {
             console.log('Error while adding this to favourites, ',error);
         }
     }
+    const handleLike = async(commentId) => {
+      console.log("Liked comment:", commentId);
+      // Optionally send to backend or update local state
+      try {
+        const response = await axios.patch(`http://localhost:5000/api/like/toggleLike/${commentId}`,{}, {withCredentials: true});
+        console.log(response.data);
+        const updatedComment = response.data.likedComment;
+        const noOfLikes = response.data.noOfLikes;
+        setComments(prevComments =>
+          prevComments.map(comment =>
+            comment._id === updatedComment._id
+              ? {
+                  ...comment,
+                  isLiked: !isLiked,
+                  likeCount: noOfLikes
+                }
+              : comment
+            )
+        )
+      } catch (error) {
+        console.error('Error in handle like, error: ',error);
+      }
+    };
+
+    const handleReply = (commentId) => {
+      console.log("Replying to:", commentId);
+      // Optionally open a reply input box under this comment
+    };
   return (
     <DiscussionContextProvider value={{handleSetCreateDiscussion}}>
         {!loading && <div className={`px-3 py-3`}>
@@ -155,7 +188,7 @@ const BookInfo = () => {
                     <img src={bookInfo?.coverImage} className='h-full max-w-60 rounded-2xl object-cover border border-gray-500 shadow-md'/>
                 </div>
                 <div className='col-span-2 my-6 mx-3 flex flex-col gap-1.5 tracking-wide'>
-                    <p className='text-2xl font-semibold font-serif pt-3'>{capitalizeWords(bookInfo?.title)}</p>
+                    <p className='text-2xl font-semibold font-serif pt-3'>{!loading && capitalizeWords(bookInfo?.title)}</p>
                     <p className='text-lg font-medium font-serif'><span className='font-normal'>Author: </span>{bookInfo?.author}</p>
                     <p className='text-[14px] font-serif max-h-32 overflow-clip'><span className='text-[16px] font-medium'>Description</span>: {bookInfo?.description}</p>
                     <p className='text-sm font-serif'>Publisher: {bookInfo?.publisher}</p>
@@ -281,13 +314,41 @@ const BookInfo = () => {
                 </div>
                 <p className='text-xl font-semibold tracking-wide mx-3 my-6 border-b border-gray-400 pb-3'>User Reviews</p>
                 <div className='mx-3'>
-                    {!commentsLoading && comments.map( (comment,ind) =>(<div key={comment._id} className='w-full my-6'>
+                    {!commentsLoading && comments.map( (comment,ind) =>(<div key={comment._id} className='w-full my-3 bg-slate-200 rounded-xl p-3'>
                         <div className='flex items-center gap-3'>
                             <img src={minion} alt="minion.png" height={26} width={26} className={`rounded-full ring ${colors[ind%6].split(' ')[0]} ring-offset-2`}/>
                             <p className={`text-[12px] tracking-wide font-medium shadow-md bg-gradient-to-br ${colors[ind%6].split(' ')[1]} ${colors[ind%6].split(' ')[2]} p-1 rounded-lg text-white`}>{comment?.user}</p>
+                            <span className={`text-sm text-slate-500`}>{comment?.createdAt?.slice(0,comment?.createdAt?.length-3)}</span>
                         </div>
                         <div className="my-1.5">
                             <ExpandableInlineText key={2} text={comment?.text}/>
+                        </div>
+                        <div className='flex gap-6 mt-1 text-sm text-gray-500 items-center'>
+                            {comment?.noOfReplies >= 0 && <button className={`flex items-center gap-1 text-blue-500 cursor-pointer text-sm font-medium`}>
+                                <ArrowDropDownIcon fontSize='small'/>
+                                {comment?.noOfReplies} Replies
+                            </button>}
+                            <button
+                              className={`flex items-center gap-1 font-medium transition cursor-pointer ${
+                                comment?.isLiked ? 'text-blue-600' : 'hover:text-blue-600'
+                              }`}
+                              onClick={() => handleLike(comment._id)}
+                            >
+                              {comment?.isLiked ? (
+                                <ThumbUpAltIcon fontSize='small' />
+                              ) : (
+                                <ThumbUpAltOutlinedIcon fontSize='small' />
+                              )}
+                              <span>{comment?.likeCount}</span>
+                            </button>
+                            
+                            <button
+                              className='hover:text-blue-600 cursor-pointer font-medium flex items-center gap-1 transition'
+                              onClick={() => handleReply(comment._id)}
+                            >
+                              <ReplyOutlinedIcon fontSize='small' />
+                              Reply
+                            </button>
                         </div>
                     </div>))}
                 </div>
