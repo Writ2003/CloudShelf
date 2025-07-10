@@ -20,7 +20,7 @@ export const toggleLikeState = async(req,res) => {
         }
         await likedComment.save();
 
-        res.status(200).json({likedComment, noOfLikes: likedComment?.likedBy?.length});
+        res.status(200).json({likedComment, noOfLikes: likedComment?.likedBy?.length, userId});
     } catch (error) {
         console.error('Error while updating like state, error: ',error);
         res.status(500).json({ message: 'Server error while updating like state' });

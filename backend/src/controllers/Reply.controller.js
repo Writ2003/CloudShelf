@@ -19,7 +19,9 @@ export const addReply = async (req, res) => {
 
     await reply.save();
 
-    res.status(201).json({ message: 'Reply added successfully.', reply });
+    const noOfReplies = await Reply.countDocuments({reviewId});
+
+    res.status(201).json({ message: 'Reply added successfully.', reply, noOfReplies });
   } catch (err) {
     console.error('[Add Reply Error]', err);
     res.status(500).json({ message: 'Internal server error.' });

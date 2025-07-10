@@ -45,7 +45,6 @@ export const fetchReview = async (req, res) => {
 
   try {
     const review = await Review.findOne({ bookId, user: userId });
-    console.log('Review: ',review);
     if (!review) {
       return res.status(404).json({ message: 'No review found for this book by the user.' });
     }
@@ -103,7 +102,6 @@ export const fetchAllReviews = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    console.log(rawReviews);
 
     const likeDocs = await LikeComments.find({
       commentId: { $in: rawReviews.map((r) => r._id) },
