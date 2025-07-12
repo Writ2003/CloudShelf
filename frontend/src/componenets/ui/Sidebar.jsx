@@ -20,7 +20,7 @@ const Sidebar = () => {
     }
   }
   return (
-    <div className="w-56 sticky bottom-0 top-0 2xl:w-64 bg-white shadow-xl h-screen p-1.5 2xl:p-4 rounded-l-xl">
+    <div className="hidden md:block w-56 sticky bottom-0 top-0 2xl:w-64 bg-white shadow-xl h-screen p-1.5 2xl:p-4 rounded-l-xl">
       <div className="text-lg 2xl:text-2xl font-bold mb-10 flex gap-1 items-center">
         <img src={CloudShelfLogo} height={60} width={60}/>
         <span className='font-extrabold'>Cloud</span>Shelf

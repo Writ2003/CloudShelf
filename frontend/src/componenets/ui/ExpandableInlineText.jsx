@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-
+import parseMentions from "../../utility/parseMentions";
 const ExpandableInlineText = ({ text }) => {
   const [showSeeMore, setShowSeeMore] = useState(false); // State to control "See More" visibility
   const textRef = useRef(null); // Reference to the text container
@@ -26,11 +26,11 @@ const ExpandableInlineText = ({ text }) => {
       {/* Text Container */}
       <span
         ref={textRef}
-        className={`text-overflow text-[14px] ${
+        className={`text-overflow tracking-wide text-[14px] ${
           expandText ? "line-clamp-none" : "line-clamp-2"
         }`}
       >
-        {text}
+        {parseMentions(text)}
       </span>
 
       {/* See More Button */}

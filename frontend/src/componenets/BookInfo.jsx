@@ -36,7 +36,7 @@ const BookInfo = () => {
     const [createDiscussion,setCreateDiscussion] = useState(false);
     const [commentsLoading, setCommentsLoading] = useState(true);
     const [comments, setComments] = useState([]);
-    const [commentInfo, setCommentInfo] = useState({page: 0, totalPages: 0, totalComments: 0});
+    const [commentInfo, setCommentInfo] = useState({page: 1, totalPages: -1, totalComments: -1});
 
     useEffect(() => {
         const fetchBookInfo = async() => {
@@ -71,7 +71,7 @@ const BookInfo = () => {
         const fetchComments = async() => {
             setCommentsLoading(true);
             try {
-               const response = await axios.get(`http://localhost:5000/api/review/allReviews/${bookid}?page=${commentInfo.page+1}&limit=${15}`,{withCredentials: true});
+               const response = await axios.get(`http://localhost:5000/api/review/allReviews/${bookid}?page=${commentInfo.page}&limit=${15}`,{withCredentials: true});
                console.log('Comments: ',response.data.reviews);
                if(response.data?.reviews) setComments(response.data.reviews);
                setCommentInfo({page: response.data.currentPage, totalComments: response.data.totalReviews, totalPages: response.data.totalPages});

@@ -4,9 +4,15 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 const getScreenSize = () => {
+    if(window.innerWidth < 1280) return 'small'
     if (window.innerWidth >= 1280 && window.innerWidth < 1536) return 'medium'; // Medium screen
     return 'large'; // Large screen
 };
+const noOfBookByWidth = {
+    'small':4,
+    'medium':5,
+    'large':6
+}
 let noOfBooks;
 const Category = () => {
     const [genres, setGenres] = useState(null);
@@ -16,7 +22,7 @@ const Category = () => {
     const genreRefs = useRef({});
     useEffect(() => {
         const screenSize = getScreenSize();
-        noOfBooks = screenSize === 'medium' ? 5:6;
+        noOfBooks = noOfBookByWidth[screenSize];
         setLoading(true);
         const fetchData = async () => {
             try {
@@ -72,7 +78,7 @@ const Category = () => {
             {!loading && genres?.length>0 && genres && <div className='flex items-center gap-5 px-2 my-3 overflow-x-auto no-scrollbar'>
                 {genres.map((genre,index) => (<button onClick={() => changeGenre(genre._id)} ref={(el) => (genreRefs.current[genre._id] = el)} key={genre._id} className={`${currentGenre===genre._id?'bg-blue-600 text-white':'bg-blue-100 text-black'} text-[14px] px-2 py-1 rounded-md  font-medium flex justify-center items-center cursor-pointer whitespace-nowrap`}>{genre._id}</button>))}
             </div>}
-            {!loading && books?.length>0 && books && <div className='mt-3 mb-2 px-2 grid grid-cols-5 2xl:grid-cols-6 gap-3 2xl:gap-6 h-64 justify-items-center'>
+            {!loading && books?.length>0 && books && <div className='mt-3 mb-2 px-2 grid grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 2xl:gap-6 h-64 justify-items-center'>
                 {books.slice(0,noOfBooks).map((book,index) => (<Link to={`/bookinfo/${book._id}`} key={index} className='w-36 shadow-lg rounded-b-lg cursor-pointer'>
                     <img src={book?.coverImage} className='h-52 w-full bg-amber-900 rounded-t-lg text-2xl object-cover'/>
                     <div className='flex flex-col gap-1 px-3 py-1'>

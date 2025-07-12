@@ -6,6 +6,7 @@ import { processPDF } from "../utils/extractPDF.util.js";
 import axios from 'axios';
 
 const cardLimits = {
+    small: 4,
     medium: 5, 
     large: 6, 
 };

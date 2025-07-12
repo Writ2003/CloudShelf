@@ -8,11 +8,11 @@ const Layout = () => {
   const currentPath = navigate.pathname;
   return (
     <div className='h-full w-full bg-slate-100'>
-        <div className='grid grid-cols-6'>
-          <div className='col-span-1 z-10'>
+        <div className='flex'>
+          <div className=''>
             <Sidebar/>
           </div>
-          <div className='col-span-5 z-0'>
+          <div className='flex-1'>
             {!currentPath.split('/').includes('readbook') && <Header/>}
             <Outlet/>
           </div>
