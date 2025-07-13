@@ -1,5 +1,6 @@
 import Reply from '../models/Reply.model.js';
 import dayjs from '../utils/Dayjs.util.js';
+import LikeReplies from '../models/LikeReplies.model.js';
 
 export const addReply = async (req, res) => {
   const { reviewId } = req.params;
@@ -32,7 +33,7 @@ export const fetchReplies = async (req, res) => {
   const { reviewId } = req.params;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
-
+  const userId = req?.user?._id;
   const skip = (page - 1) * limit;
 
   try {
@@ -44,14 +45,31 @@ export const fetchReplies = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    const replies = rawReplies.map(reply => ({
-      _id: reply._id,
-      reviewId: reply.reviewId,
-      user: reply.user,
-      text: reply.text,
-      createdAt: dayjs(reply.createdAt).fromNow(),
-      updatedAt: dayjs(reply.updatedAt).fromNow(),
-    }));
+    const likeDocs = await LikeReplies.find({
+      replyId: { $in: rawReplies.map((r) => r._id) },
+    });
+
+    const likeDocMap = new Map(
+      likeDocs.map((doc) => [doc.replyId.toString(), doc])
+    );
+
+    const replies = rawReplies.map(reply => {
+      const doc = likeDocMap.get(reply._id.toString());
+      const likedBy = doc?.likedBy || [];
+      const isLiked = userId ? likedBy.includes(userId.toString()) : false;
+      const likeCount = likedBy.length;
+
+      return {
+        _id: reply._id,
+        reviewId: reply.reviewId,
+        user: reply?.user?.name || reply?.user?.email,
+        text: reply.text,
+        isLiked,
+        likeCount,
+        createdAt: dayjs(reply.createdAt).fromNow(),
+        updatedAt: dayjs(reply.updatedAt).fromNow(),
+      };
+    });
 
     res.status(200).json({
       replies,

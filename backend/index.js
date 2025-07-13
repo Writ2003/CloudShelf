@@ -42,6 +42,7 @@ import ReplyRoutes from "./src/routes/Reply.routes.js"
 import TopicRoutes from "./src/routes/Topic.route.js"
 import DiscussionMessagesRoutes from "./src/routes/DiscussionMessages.route.js";
 import LikeCommentsRoute from './src/routes/LikeComments.route.js';
+import LikeRepliesRoute from './src/routes/LikeReplies.route.js';
 
 // Default route
 app.get('/', (req, res) => {
@@ -55,9 +56,10 @@ app.use("/api/search",searchRoutes);
 app.use("/api/tts",TextToSpeectRoutes);
 app.use("/api/review", ReviewRoutes);
 app.use("/api/reply", ReplyRoutes);
-app.use("/api/topic", TopicRoutes);
+app.use("/api/discussionTopic", TopicRoutes);
 app.use("/api/discussionMessages", DiscussionMessagesRoutes);
-app.use("/api/like", LikeCommentsRoute);
+app.use("/api/likeComment", LikeCommentsRoute);
+app.use("/api/likeReply", LikeRepliesRoute);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;

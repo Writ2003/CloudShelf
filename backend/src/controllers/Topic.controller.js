@@ -1,12 +1,21 @@
 import Topic from "../models/Topic.model.js";
+import sanitizeHtml from 'sanitize-html';
+
+const allowedTags = ['b', 'i', 'em', 'strong', 'u', 's', 'p', 'ul', 'ol', 'li', 'br', 'span'];
 
 export const createTopic = async (req, res) => {
   try {
     const { title, description, bookId } = req.body;
     const createdBy = req.user._id;
 
-    const newTopic = await Topic.create({ title, description, bookId, createdBy });
-    res.status(201).json(newTopic);
+    const cleanHTML = sanitizeHtml(description, {allowedTags});
+
+    if (cleanHTML.length > 1000) {
+      return res.status(400).json({ message: 'Description is too long.' });
+    }
+
+    const newTopic = await Topic.create({ title, description:cleanHTML, bookId, createdBy });
+    res.status(201).json({newTopic});
   } catch (error) {
     console.error("Error creating topic:", error);
     res.status(500).json({ message: "Failed to create topic" });

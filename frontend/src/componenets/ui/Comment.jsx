@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState ,useRef } from 'react'
 import axios from 'axios';
 import ExpandableInlineText from './ExpandableInlineText';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -30,12 +30,13 @@ const Comment = ({comment, ind}) => {
     const [isShowRepliesClicked, setIsShowRepliesClicked] = useState(false);
     const [isReplyClicked, setIsReplyClicked] = useState(false);
     const [replyToUser, setReplyToUser] = useState(null);
+    const replyInputRef = useRef(null);
 
     const handleLike = async(commentId) => {
       console.log("Liked comment:", commentId);
       // Optionally send to backend or update local state
       try {
-        const response = await axios.patch(`http://localhost:5000/api/like/toggleLike/${commentId}`,{}, {withCredentials: true});
+        const response = await axios.patch(`http://localhost:5000/api/likeComment/toggleLike/${commentId}`,{}, {withCredentials: true});
         console.log(response.data);
         const updatedComment = response.data.likedComment;
         const user = response.data.userId; 
@@ -70,6 +71,7 @@ const Comment = ({comment, ind}) => {
 
     const fetchReplies = async(e) => {
       e.preventDefault();
+      if(isShowRepliesClicked) return;
       setIsRepliesLoading(true);
       try {
         const response = await axios.get(`http://localhost:5000/api/reply/fetchReplies/${currentComment._id}?page=${replyInfo.currentPage}&limit=${replyInfo.limit}`,{withCredentials: true});
@@ -88,6 +90,13 @@ const Comment = ({comment, ind}) => {
       setReplyToUser(user);
       setIsReplyClicked(true);   // triggers showing the reply input
       setCommentReply(`@${user} `);
+      setTimeout(() => {
+        replyInputRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+        replyInputRef.current?.focus(); // optional: auto focus
+      }, 0);
     };
 
 
@@ -123,7 +132,16 @@ const Comment = ({comment, ind}) => {
           </button>
           <button
             className='hover:text-blue-600 cursor-pointer font-medium flex items-center gap-1 transition'
-            onClick={() => setIsReplyClicked(prev => !prev)}
+            onClick={() => {
+              setIsReplyClicked(prev => !prev);
+              setTimeout(() => {
+                replyInputRef.current?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center',
+                });
+                replyInputRef.current?.focus(); // optional: auto focus
+              }, 0);
+            }}
           >
             <ChatBubbleOutlineIcon fontSize='small' className="align-middle"/>
             <span className="relative -top-[1px]">Reply</span>
@@ -139,6 +157,7 @@ const Comment = ({comment, ind}) => {
             <input value={commentReply} onChange={(e) => setCommentReply(e.target.value)}
               className={`outline-none border bg-slate-100 h-9 border-slate-200 rounded-xl rounded-r-none w-xl px-2 py-1 col-span-5`}
               placeholder='Write a reply...'
+              ref={replyInputRef}
             />
             <button className='w-9 h-9 flex justify-center items-center bg-slate-500 cursor-pointer shadow-lg rounded-l-none rounded-3xl transition active:bg-slate-400 duration-200'
               type='submit'

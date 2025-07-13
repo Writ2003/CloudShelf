@@ -37,6 +37,8 @@ const BookInfo = () => {
     const [commentsLoading, setCommentsLoading] = useState(true);
     const [comments, setComments] = useState([]);
     const [commentInfo, setCommentInfo] = useState({page: 1, totalPages: -1, totalComments: -1});
+    const [discussionTopics, setDiscussionTopics] = useState([]);
+    const [isTopicsLoading, setIsTopicsLoading] = useState(false);
 
     useEffect(() => {
         const fetchBookInfo = async() => {
@@ -122,6 +124,20 @@ const BookInfo = () => {
         if(e) e.preventDefault();
         setCreateDiscussion(prev => !prev);
     }
+    const handleDiscussionTopic = async(title, description) => {
+        if(!title) return;
+        setIsTopicsLoading(true);
+        try {
+            const response = await axios.post(`http://localhost:5000/api/discussionTopic/createTopic`,{title, description, bookId:bookid}, {withCredentials: true});
+            console.log(response.data.newTopic);
+            setDiscussionTopics(prev => ([...prev, response.data.newTopic]));
+        } catch (error) {
+            console.error('Error while creating discussion topic, error: ',error?.response?.data?.message || error);
+        } finally {
+            setCreateDiscussion(false);
+            setIsTopicsLoading(false)
+        }
+    }
     const incrementReadCount = async() => {
         try {
             const response = await axios.post(`http://localhost:5000/api/book/read/${bookid}`,{},{withCredentials: true});
@@ -139,7 +155,7 @@ const BookInfo = () => {
         }
     }
   return (
-    <DiscussionContextProvider value={{handleSetCreateDiscussion}}>
+    <DiscussionContextProvider value={{handleSetCreateDiscussion, handleDiscussionTopic, isTopicsLoading}}>
         {!loading && <div className={`px-3 py-3`}>
             <div className={`flex bg-slate-50 rounded-lg min-h-96 ${createDiscussion?'blur-[2px]':''}`}>
                 <div className='flex gap-6 items-center justify-start m-6 h-80'>
@@ -208,10 +224,10 @@ const BookInfo = () => {
                         <p>LATEST POST</p>
                     </div>
                 </div>
-                <div className={`grid grid-cols-2 px-6 mt-1.5 font-medium text-[12px] border-b border-gray-400 pb-2`}>
+                {!isTopicsLoading && discussionTopics.map(discussion => (<div key={discussion._id} className={`grid grid-cols-2 px-6 mt-1.5 font-medium text-[12px] border-b border-gray-400 pb-2`}>
                     <div className='flex items-center gap-3'>
                         <Link><img src={avatar} alt="profile-pic" className='rounded-full h-[24px] w-[24px] ring ring-offset-2 ring-gray-400'/></Link>
-                        <Link><p className='text-[14px] text-blue-500 cursor-pointer'>Ending Spoiler alert, discussion on the movie</p></Link>
+                        <Link><p className='text-[14px] text-blue-500 cursor-pointer'>{discussion?.title}</p></Link>
                     </div>
                     <div className='grid grid-cols-3 justify-items-center items-center'>
                         <p>5</p>
@@ -224,7 +240,7 @@ const BookInfo = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>))}
                 <div className={`flex justify-center items-center rounded-b-lg p-1 bg-slate-200/60`}><button className='cursor-pointer text-[14px] text-blue-600 font-medium tracking-wide'>View all</button></div>
             </div>
             {createDiscussion && <CreateDiscussionTopic/>}

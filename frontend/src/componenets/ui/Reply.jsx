@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import axios from 'axios';
 import minion from '/src/assets/minion.png?url';
 import ExpandableInlineText from './ExpandableInlineText';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import { SendHorizonal } from 'lucide-react';
 
 const colors = [
     'ring-amber-400 from-amber-500 to-amber-400',
@@ -24,14 +23,14 @@ const Reply = ({reply, ind, onReplyClick}) => {
       console.log("Liked Reply:", currentReply._id);
       // Optionally send to backend or update local state
       try {
-        const response = await axios.patch(`http://localhost:5000/api/like/toggleLike/${currentReply._id}`,{}, {withCredentials: true});
+        const response = await axios.patch(`http://localhost:5000/api/likeReply/toggleLike/${currentReply._id}`,{}, {withCredentials: true});
         console.log(response.data);
-        const updatedComment = response.data.likedComment;
+        const updatedReply = response.data.likedReply;
         const user = response.data.userId; 
-        const likedBy = updatedComment.likedBy || [];
+        const likedBy = updatedReply.likedBy || [];
         const isLiked = likedBy.includes(user);
         const noOfLikes = response.data.noOfLikes;
-        setCurrentComment(prevComment => ({...prevComment, isLiked, likeCount:noOfLikes }));
+        setCurrentReply(prevReply => ({...prevReply, isLiked, likeCount:noOfLikes }));
       } catch (error) {
         console.error('Error in handle like, error: ',error);
       }
@@ -41,7 +40,7 @@ const Reply = ({reply, ind, onReplyClick}) => {
     <div className='mb-3 w-full'>
       <div className='flex items-center gap-3'>
           <img src={minion} alt="minion.png" height={26} width={26} className={`rounded-full ring ${colors[ind%6].split(' ')[0]} ring-offset-2`}/>
-          <p className={`text-[12px] tracking-wide font-medium shadow-md bg-gradient-to-br ${colors[ind%6].split(' ')[1]} ${colors[ind%6].split(' ')[2]} p-1 rounded-lg text-white`}>{currentReply?.user?.email || currentReply?.user?.name}</p>
+          <p className={`text-[12px] tracking-wide font-medium shadow-md bg-gradient-to-br ${colors[ind%6].split(' ')[1]} ${colors[ind%6].split(' ')[2]} p-1 rounded-lg text-white`}>{currentReply?.user}</p>
           <span className={`text-sm text-slate-500`}>{currentReply?.createdAt?.slice(0,currentReply?.createdAt?.length-3)}</span>
       </div>
       <div className='my-1.5 ml-10'>
@@ -63,7 +62,7 @@ const Reply = ({reply, ind, onReplyClick}) => {
         </button>
         <button
           className='hover:text-blue-600 cursor-pointer font-medium flex items-center gap-1 transition'
-          onClick={() => onReplyClick(currentReply?.user?.email || currentReply?.user?.name)}
+          onClick={() => onReplyClick(currentReply?.user)}
         >
           <ChatBubbleOutlineIcon fontSize='small' className="align-middle"/>
           <span className="relative -top-[1px]">Reply</span>

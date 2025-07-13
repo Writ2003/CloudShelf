@@ -5,7 +5,7 @@ import { addReply, fetchReplies, deleteReply, updateReply } from '../controllers
 const router = Router();
 
 router.post('/addReply/:reviewId', verifyToken, addReply);
-router.get('/fetchReplies/:reviewId', fetchReplies);
+router.get('/fetchReplies/:reviewId',verifyToken, fetchReplies);
 router.delete('/deleteReply/:replyId', verifyToken, deleteReply);
 router.put('/updateReply/:replyId', verifyToken, updateReply);
 

@@ -1,57 +1,87 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect, useRef} from 'react';
+import RichTextEditor from './RichTextEditor';
 import { DiscussionContext } from '../BookInfo';
-
+import { CircleLoader, ClipLoader } from 'react-spinners'
 
 const CreateDiscussionTopic = () => {
-  const { handleSetCreateDiscussion } = useContext(DiscussionContext);
+  const editorRef = useRef(); // 👈 Ref for editor
+  const {handleSetCreateDiscussion, handleDiscussionTopic, isTopicLoading} = useContext(DiscussionContext);
+  const [subject, setSubject] = useState('');
+  const [description, setDescription] = useState('');
+
+  const handleEditorChange = (html) => {
+    setDescription(html);
+  };
+
+  const createTopic = async(e) => {
+    e.preventDefault();
+    console.log('Subject:', subject);
+    console.log('Description:', description);
+    const sub = subject, desc = description;
+    setSubject('');
+    setDescription('');
+    handleDiscussionTopic(sub, desc);
+  };
 
   return (
     <>
-      {/* Overlay */}
-      <div className="fixed inset-0 z-40" onClick={handleSetCreateDiscussion} />
+      <div className="fixed inset-0 z-40" />
 
-      {/* Modal */}
       <div className="fixed z-50 inset-0 flex items-center justify-center px-4">
         <div className="bg-gray-600 text-white rounded-md shadow-lg w-full max-w-2xl p-6 relative">
-          {/* Close Button */}
           <button
             className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl"
             onClick={handleSetCreateDiscussion}
+            disabled={isTopicLoading}
           >
             &times;
           </button>
 
-          {/* Modal Content */}
           <h2 className="text-xl font-semibold mb-4">New Topic</h2>
           <input
             type="text"
             placeholder="Subject"
+            onChange={(e) => setSubject(e.target.value)}
             className="w-full bg-gray-800 border border-gray-700 text-white px-3 py-2 rounded mb-4"
           />
 
           <div className="bg-gray-800 border border-gray-700 p-3 rounded mb-4">
-            {/* Simulated toolbar */}
-            <div className="flex flex-wrap gap-2 text-gray-300 mb-2 mx-3 font-medium">
-              <button className="hover:text-white cursor-pointer">B</button>
-              <button className="hover:text-white cursor-pointer">I</button>
-              <button className="hover:text-white cursor-pointer">U</button>
-              <button className="hover:text-white cursor-pointer">S</button>
+            <div className="flex flex-wrap items-center gap-2 text-gray-300 mb-2 mx-3 font-medium">
+              <button onClick={() => editorRef.current?.toggleBold()}>B</button>
+              <button onClick={() => editorRef.current?.toggleItalic()}>I</button>
+              <button onClick={() => editorRef.current?.toggleUnderline()}>U</button>
+              <button onClick={() => editorRef.current?.toggleStrike()}>S</button>
+              <button onClick={() => editorRef.current?.undo()}>Undo</button>
+              <button onClick={() => editorRef.current?.redo()}>Redo</button>
             </div>
-            <textarea
-              placeholder="Type something"
-              className="w-full bg-gray-900 border border-gray-700 text-white p-2 rounded h-40 resize-none"
-            ></textarea>
+
+            <RichTextEditor
+              ref={editorRef}
+              initialContent="<p>Optional description...</p>"
+              onChange={handleEditorChange}
+            />
           </div>
+
+          <h3 className="font-medium tracking-wide">Preview:</h3>
+          <div
+            className="border mb-3 min-h-[40px] flex items-center px-3 overflow-auto no-scrollbar bg-slate-100 rounded-md text-black"
+            dangerouslySetInnerHTML={{ __html: description }}
+          />
 
           <div className="flex justify-end gap-3">
             <button
-              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded"
-              onClick={handleSetCreateDiscussion}
+              className={`${isTopicLoading? 'bg-gray-700/50' : 'bg-gray-700 hover:bg-gray-600'} px-4 py-2 rounded`}
+              disabled={isTopicLoading}
+              onClick={() => {
+                setSubject('');
+                setDescription('');
+                handleSetCreateDiscussion();
+              }}
             >
               Cancel
             </button>
-            <button className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white">
-              Create
+            <button onClick={createTopic} className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white">
+              {isTopicLoading? <ClipLoader color='#fafaf9' speedMultiplier={1.5} size={20} /> :'Create'}
             </button>
           </div>
         </div>
