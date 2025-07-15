@@ -20,3 +20,17 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+@layer base {
+  .ProseMirror {
+    @apply border-none outline-none bg-transparent;
+  }
+}
+
+.mention {
+  background-color: #e0f2fe; /* Light blue */
+  color: #0369a1;            /* Blue text */
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}

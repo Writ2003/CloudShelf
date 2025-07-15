@@ -27,9 +27,16 @@ export const getTopics = async (req, res) => {
     const { bookId } = req.query;
 
     const query = bookId ? { bookId } : {};
-    const topics = await Topic.find(query).populate("createdBy", "name").sort({ createdAt: -1 });
-
-    res.status(200).json(topics);
+    let topics = await Topic.find(query).populate("createdBy", "name email").sort({ createdAt: -1 });
+    const noOfTopics = topics?.length;
+    topics = topics.map(topic => {
+      const plain = topic.toObject();  // convert to plain JS object
+      return {
+        ...plain,
+        user: topic.createdBy?.name || topic.createdBy?.email,
+      };
+    });
+    res.status(200).json({topics, noOfTopics});
   } catch (error) {
     console.error("Error fetching topics:", error);
     res.status(500).json({ message: "Failed to fetch topics" });

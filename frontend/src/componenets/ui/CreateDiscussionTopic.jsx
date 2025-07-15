@@ -57,8 +57,9 @@ const CreateDiscussionTopic = () => {
 
             <RichTextEditor
               ref={editorRef}
-              initialContent="<p>Optional description...</p>"
+              placeholderText="Add your reply to the topic..."
               onChange={handleEditorChange}
+              maxCharLimit={100}
             />
           </div>
 

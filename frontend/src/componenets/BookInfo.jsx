@@ -12,6 +12,7 @@ import IconButton from '@mui/material/IconButton';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import Comment from './ui/Comment';
+import { Skeleton } from '@mui/material';
 
 export const DiscussionContext = createContext();
 export const DiscussionContextProvider = DiscussionContext.Provider;
@@ -39,6 +40,8 @@ const BookInfo = () => {
     const [commentInfo, setCommentInfo] = useState({page: 1, totalPages: -1, totalComments: -1});
     const [discussionTopics, setDiscussionTopics] = useState([]);
     const [isTopicsLoading, setIsTopicsLoading] = useState(false);
+    const [topicsInfo, setTopicsInfo] = useState({maxToBeShown: 5, count:0, showAll: false});
+    const [isImageLoaded, setIsImageLoaded] = useState(false);
 
     useEffect(() => {
         const fetchBookInfo = async() => {
@@ -83,9 +86,23 @@ const BookInfo = () => {
                 setCommentsLoading(false);
             }
         }
+        const fetchDiscussionTopics = async() => {
+            setIsTopicsLoading(true);
+            try {
+                const response = await axios(`http://localhost:5000/api/discussionTopic/getTopics?bookId=${bookid}`,{withCredentials: true});
+                console.log('Topics: ',response?.data?.topics)
+                setDiscussionTopics(response?.data?.topics);
+                setTopicsInfo(prev => ({...prev, count: response?.data?.noOfTopics}));
+            } catch (error) {
+                console.error('Error while fetching discussion topics, error: ',error?.response?.data?.message || error)
+            } finally {
+                setIsTopicsLoading(false);
+            }
+        }
         fetchBookInfo();
         fetchUserReviewInfo();
         fetchComments();
+        fetchDiscussionTopics();
     },[bookid])
     const capitalizeWords = (str) => {
         if (!str || typeof str !== 'string') return '';
@@ -130,7 +147,8 @@ const BookInfo = () => {
         try {
             const response = await axios.post(`http://localhost:5000/api/discussionTopic/createTopic`,{title, description, bookId:bookid}, {withCredentials: true});
             console.log(response.data.newTopic);
-            setDiscussionTopics(prev => ([...prev, response.data.newTopic]));
+            setDiscussionTopics(prev => ([response.data.newTopic, ...prev]));
+            setTopicsInfo(prev => ({...prev, count: prev.count + 1}));
         } catch (error) {
             console.error('Error while creating discussion topic, error: ',error?.response?.data?.message || error);
         } finally {
@@ -138,6 +156,14 @@ const BookInfo = () => {
             setIsTopicsLoading(false)
         }
     }
+    const displayTopics = () => {
+        if(topicsInfo.showAll) return discussionTopics;
+        else {
+            let noOfTopics = discussionTopics.length;
+            let toBeShown = noOfTopics < topicsInfo.maxToBeShown ? noOfTopics : topicsInfo.maxToBeShown;
+            return discussionTopics.slice(0,toBeShown);
+        }
+    };
     const incrementReadCount = async() => {
         try {
             const response = await axios.post(`http://localhost:5000/api/book/read/${bookid}`,{},{withCredentials: true});
@@ -159,7 +185,30 @@ const BookInfo = () => {
         {!loading && <div className={`px-3 py-3`}>
             <div className={`flex bg-slate-50 rounded-lg min-h-96 ${createDiscussion?'blur-[2px]':''}`}>
                 <div className='flex gap-6 items-center justify-start m-6 h-80'>
-                    <img src={bookInfo?.coverImage} className='h-full max-w-60 rounded-2xl object-cover border border-gray-500 shadow-md'/>
+                    {!bookInfo?.coverImage || !isImageLoaded ? (
+                       <Skeleton
+                         variant="rectangular"
+                         width={240}
+                         height="100%"
+                         animation="wave"
+                         sx={{
+                           borderRadius: '1rem',
+                           boxShadow: 2,
+                           border: '1px solid #9ca3af'
+                         }}
+                       />
+                     ) : null}
+                    
+                     {bookInfo?.coverImage && (
+                       <img
+                         src={bookInfo.coverImage}
+                         onLoad={() => setIsImageLoaded(true)}
+                         className={`h-full max-w-60 rounded-2xl object-cover border border-gray-500 shadow-md ${
+                           isImageLoaded ? '' : 'hidden'
+                         }`}
+                         alt="Book Cover"
+                       />
+                     )}
                 </div>
                 <div className='col-span-2 my-6 mx-3 flex flex-col gap-1.5 tracking-wide'>
                     <p className='text-2xl font-semibold font-serif pt-3'>{capitalizeWords(bookInfo?.title)}</p>
@@ -224,10 +273,13 @@ const BookInfo = () => {
                         <p>LATEST POST</p>
                     </div>
                 </div>
-                {!isTopicsLoading && discussionTopics.map(discussion => (<div key={discussion._id} className={`grid grid-cols-2 px-6 mt-1.5 font-medium text-[12px] border-b border-gray-400 pb-2`}>
+                {!isTopicsLoading && displayTopics().map(discussion => (<div key={discussion._id} className={`grid grid-cols-2 px-6 mt-1.5 font-medium text-[12px] border-b border-gray-400 pb-2`}>
                     <div className='flex items-center gap-3'>
-                        <Link><img src={avatar} alt="profile-pic" className='rounded-full h-[24px] w-[24px] ring ring-offset-2 ring-gray-400'/></Link>
-                        <Link><p className='text-[14px] text-blue-500 cursor-pointer'>{discussion?.title}</p></Link>
+                        <Link to={`/discussion/${discussion._id}`}><img src={avatar} alt="profile-pic" className='rounded-full h-[24px] w-[24px] ring ring-offset-2 ring-gray-400'/></Link>
+                        <div className='flex flex-col'>
+                            <Link to={`/discussion/${discussion._id}`}><p className='text-[14px] text-blue-500 cursor-pointer'>{discussion?.title}</p></Link>
+                            <p className='text-sm text-slate-500 font-medium'>by {discussion?.user}</p>
+                        </div>
                     </div>
                     <div className='grid grid-cols-3 justify-items-center items-center'>
                         <p>5</p>
@@ -241,7 +293,8 @@ const BookInfo = () => {
                         </div>
                     </div>
                 </div>))}
-                <div className={`flex justify-center items-center rounded-b-lg p-1 bg-slate-200/60`}><button className='cursor-pointer text-[14px] text-blue-600 font-medium tracking-wide'>View all</button></div>
+                {topicsInfo.count >5 && !topicsInfo.showAll ? <div className={`flex justify-center items-center rounded-b-lg p-1 bg-slate-200/60`}><button onClick={() => setTopicsInfo(prev => ({...prev, showAll: true}))} className='cursor-pointer text-[14px] text-blue-600 font-medium tracking-wide'>View all</button></div>:''}
+                {topicsInfo.count >5 && topicsInfo.showAll ? <div className={`flex justify-center items-center rounded-b-lg p-1 bg-slate-200/60`}><button onClick={() => setTopicsInfo(prev => ({...prev, showAll: false}))} className='cursor-pointer text-[14px] text-blue-600 font-medium tracking-wide'>Show less</button></div>:''}
             </div>
             {createDiscussion && <CreateDiscussionTopic/>}
             <div className={`bg-slate-50 p-3 mt-3 rounded-lg ${createDiscussion?'blur-[2px]':''}`}>

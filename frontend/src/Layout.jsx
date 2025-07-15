@@ -3,6 +3,7 @@ import Header from './componenets/ui/Header';
 import Sidebar from './componenets/ui/Sidebar';
 import { Outlet, useLocation } from 'react-router-dom';
 
+const paths = ['readbook','discussion']
 const Layout = () => {
   const navigate = useLocation();
   const currentPath = navigate.pathname;
@@ -13,7 +14,7 @@ const Layout = () => {
             <Sidebar/>
           </div>
           <div className='flex-1'>
-            {!currentPath.split('/').includes('readbook') && <Header/>}
+            {!paths.some(path => currentPath.split('/').includes(path)) && <Header/>}
             <Outlet/>
           </div>
         </div>
