@@ -5,30 +5,39 @@ export default (io) => {
   io.on('connection', (socket) => {
     console.log('New client connected:', socket.id);
 
-    socket.on('join_topic', (topicId) => {
-      socket.join(`topic_${topicId}`);
+    socket.on('join_topic', ({ topicId, userId, username }) => {
+      const room = `topic_${topicId}`;
+      socket.join(room);
+
+      socket.to(room).emit("user_joined", { username, userId });
+      console.log(`✅ ${username} joined ${room}`);
     });
 
-    socket.on('leave_topic', (topicId) => {
-      socket.leave(`topic_${topicId}`);
+    socket.on('leave_topic', ({ topicId, userId, username }) => {
+      const room = `topic_${topicId}`;
+      socket.leave(room);
+
+      socket.to(room).emit("user_left", { username, userId });
+      console.log(`🚪 ${username} left ${room}`);
     });
 
-    socket.on("discussion_send_message", async ({ topicId, user, text, parentMessage }) => {
+    socket.on("discussion_send_message", async (data) => {
+      const { topicId, message, userId } = data;
+      const room = `topic_${topicId}`;
       try {
-        const message = await DiscussionMessage.create({
+        const currentMessage = await DiscussionMessage.create({
           topicId,
-          user,
-          text,
-          parentMessage: parentMessage || null
+          user: userId,
+          text: message,
         });
 
-        const populatedMessage = await message.populate('user', 'name');
+        const populatedMessage = await currentMessage.populate('user', 'name');
 
-        io.to(`topic_${topicId}`).emit("discussion_receive_message", {
-          _id: message._id,
+        io.to(room).emit("discussion_receive_message", {
+          _id: currentMessage._id,
           user: populatedMessage.user,
-          text: message.text,
-          createdAgo: dayjs(message.createdAt).fromNow()
+          text: currentMessage.text,
+          createdAt: currentMessage.createdAt
         });
       } catch (err) {
         console.error('Socket message error:', err);
