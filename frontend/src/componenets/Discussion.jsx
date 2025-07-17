@@ -1,15 +1,20 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Pagination from './ui/Pagination';
 import PostCard from './ui/PostCard'
 import QuickReplyBox from './ui/QuickReplyBox'
 import minion from '/src/assets/minion.png?url';
 import { discussionSocket } from '../socket'
 import { useParams } from 'react-router-dom'
+import axios from 'axios';
 
-const Discussion = ({ user, bookId }) => {
+const Discussion = () => {
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
-  const { discussionId } = useParams();
+  const { discussionId, bookId } = useParams();
+  const [userLoading, setUserLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [pageInfo, setPageInfo] = useState({currentPage: 1, totalPages: 1, totalMessages: 0});
 
   // ✅ Scroll to latest message
   const scrollToBottom = () => {
@@ -20,44 +25,103 @@ const Discussion = ({ user, bookId }) => {
   // Save to backend
     const newMessage = {
       topicId: discussionId,
-      bookId,
       userId: user._id,
-      text: newHTMLContent, // Assuming QuickReplyBox gives HTML or text
+      message: newHTMLContent, // Assuming QuickReplyBox gives HTML or text
+      timestamp: Date.now(),
+      username: user.username
     };
 
-    discussionSocket.emit("send_message", newMessage);
+    discussionSocket.emit("discussion_send_message", newMessage);
 
-    setMessages((prev) => [...prev, newMessage]);
+    //setMessages((prev) => [...prev, newMessage]);
     scrollToBottom();
     console.log('Submit:', newHTMLContent);
   };
 
   useEffect(() => {
-    // ✅ Join discussion room
-    discussionSocket.emit("join_topic", { topicId: discussionId, userId: user._id, username: user.name });
+    let isMounted = true;
 
-    // ✅ Listen for incoming messages
-    discussionSocket.on("discussion_receive_message", (data) => {
-      setMessages((prev) => [...prev, data]);
-      scrollToBottom();
-    });
+    const fetchUserAndJoin = async () => {
+      setUserLoading(true);
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/protectedRoute/auth/verify",
+          { withCredentials: true }
+        );
+
+        if (!isMounted) return;
+
+        const fetchedUser = response.data.populatedUser;
+        setUser(fetchedUser);
+
+        // ✅ Now join topic after user is set
+        discussionSocket.emit("join_topic", {
+          topicId: discussionId,
+          userId: fetchedUser._id,
+          username: fetchedUser.username,
+        });
+
+        // ✅ Listen for incoming messages
+        discussionSocket.on("discussion_receive_message", (data) => {
+          setMessages((prev) => [...prev, data]);
+          scrollToBottom();
+        });
+      } catch (error) {
+        console.error(
+          "Error while fetching user info in discussion page, error: ",
+          error?.response?.data?.message || error.message
+        );
+      } finally {
+        setUserLoading(false);
+      }
+    };
+
+    fetchUserAndJoin();
+
+    const fetchMessages = async() => {
+      setMessagesLoading(true);
+      try {
+        const response = await axios.get(`http://localhost:5000/api/discussionMessages/get/${discussionId}`,{withCredentials: true});
+        setMessages(response.data.messages);
+        const totalPages = ceil(response.data.messages.length/5);
+        setPageInfo({currentPage: totalPages, totalPages, totalMessages:response.data.totalMessages})
+      } catch (error) {
+        console.log('Error while fetching messages, error: ',error?.response?.data?.message || error.message)
+      } finally {
+        setMessagesLoading(false);
+      }
+    }
+
+    fetchMessages();
 
     return () => {
-      discussionSocket.emit("leave_topic", { topicId: discussionId, userId: user._id, username: user.name });
+      isMounted = false;
+
+      if (user?._id) {
+        discussionSocket.emit("leave_topic", {
+          topicId: discussionId,
+          userId: user._id,
+          username: user.username,
+        });
+      }
+
       discussionSocket.off();
     };
-  }, [discussionId, bookId, user._id]);
+  }, [discussionId, bookId]);
 
+  const onPageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  }
   return (
     <div className="p-6 max-w-4xl mx-auto bg-gray-50 my-3 rounded-lg shadow-xl">
-      {messages && messages.map((message) => (
-        <PostCard key={message._id} post={message} />
+      {!messagesLoading && messages && messages.slice((pageInfo.currentPage-1)*5,pageInfo.currentPage*5).map((message) => (
+        <PostCard key={message._id || message.timestamp} post={message}/>
       ))}
-      <Pagination />
+      <Pagination currentPage={pageInfo.currentPage} totalPages={pageInfo.totalPages} onPageChange={onPageChange}/>
       <div className='flex gap-3'>
         <img src={minion} height={36} width={36} className='mb-auto mt-10 rounded-full ml-3 ring ring-amber-500 ring-offset-2'/>
         <div className='flex-1'>
-          <QuickReplyBox onSubmit={handleSubmit} />
+          {!messagesLoading && <QuickReplyBox onSubmit={handleSubmit} />}
         </div>
       </div>
       <div ref={messagesEndRef}></div>

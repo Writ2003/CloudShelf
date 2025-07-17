@@ -275,9 +275,9 @@ const BookInfo = () => {
                 </div>
                 {!isTopicsLoading && displayTopics().map(discussion => (<div key={discussion._id} className={`grid grid-cols-2 px-6 mt-1.5 font-medium text-[12px] border-b border-gray-400 pb-2`}>
                     <div className='flex items-center gap-3'>
-                        <Link to={`/discussion/${discussion._id}`}><img src={avatar} alt="profile-pic" className='rounded-full h-[24px] w-[24px] ring ring-offset-2 ring-gray-400'/></Link>
+                        <Link to={`/book/${bookid}/discussion/${discussion._id}`}><img src={avatar} alt="profile-pic" className='rounded-full h-[24px] w-[24px] ring ring-offset-2 ring-gray-400'/></Link>
                         <div className='flex flex-col'>
-                            <Link to={`/discussion/${discussion._id}`}><p className='text-[14px] text-blue-500 cursor-pointer'>{discussion?.title}</p></Link>
+                            <Link to={`/book/${bookid}/discussion/${discussion._id}`}><p className='text-[14px] text-blue-500 cursor-pointer'>{discussion?.title}</p></Link>
                             <p className='text-sm text-slate-500 font-medium'>by {discussion?.user}</p>
                         </div>
                     </div>

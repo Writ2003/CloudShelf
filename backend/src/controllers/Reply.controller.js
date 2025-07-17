@@ -21,7 +21,7 @@ export const addReply = async (req, res) => {
     await reply.save();
 
     const noOfReplies = await Reply.countDocuments({reviewId});
-
+    reply = (await reply.populate('user','username email')).toObject();
     res.status(201).json({ message: 'Reply added successfully.', reply, noOfReplies });
   } catch (err) {
     console.error('[Add Reply Error]', err);
@@ -40,7 +40,7 @@ export const fetchReplies = async (req, res) => {
     const totalReplies = await Reply.countDocuments({ reviewId });
 
     const rawReplies = await Reply.find({ reviewId })
-      .populate('user', 'name email') // Optional: show user info
+      .populate('user', 'username email') // Optional: show user info
       .sort({ createdAt: 1 }) // oldest first
       .skip(skip)
       .limit(limit);
@@ -62,7 +62,7 @@ export const fetchReplies = async (req, res) => {
       return {
         _id: reply._id,
         reviewId: reply.reviewId,
-        user: reply?.user?.name || reply?.user?.email,
+        user: reply.user.username || reply.user.email,
         text: reply.text,
         isLiked,
         likeCount,
@@ -121,7 +121,7 @@ export const updateReply = async (req, res) => {
 
     reply.text = text.trim();
     await reply.save();
-
+    reply = (await reply.populate('user','username email')).toObject();
     res.status(200).json({ message: 'Reply updated successfully.', reply });
   } catch (err) {
     console.error('[Update Reply Error]', err);

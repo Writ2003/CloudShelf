@@ -1,5 +1,9 @@
 import DiscussionMessage from '../models/DiscussionMessage.model.js';
-import dayjs from '../utils/dayjs.util.js';
+import dayjs from 'dayjs';
+
+const formatDate = (mongoDate) => {
+  return dayjs(mongoDate).format("HH:mm DD/MM/YY");
+};
 
 export default (io) => {
   io.on('connection', (socket) => {
@@ -22,7 +26,7 @@ export default (io) => {
     });
 
     socket.on("discussion_send_message", async (data) => {
-      const { topicId, message, userId } = data;
+      const { topicId, message, userId, timestamp, username } = data;
       const room = `topic_${topicId}`;
       try {
         const currentMessage = await DiscussionMessage.create({
@@ -31,13 +35,11 @@ export default (io) => {
           text: message,
         });
 
-        const populatedMessage = await currentMessage.populate('user', 'name');
-
         io.to(room).emit("discussion_receive_message", {
           _id: currentMessage._id,
-          user: populatedMessage.user,
+          user: username,
           text: currentMessage.text,
-          createdAt: currentMessage.createdAt
+          timestamp: formatDate(currentMessage.createdAt)
         });
       } catch (err) {
         console.error('Socket message error:', err);

@@ -21,7 +21,12 @@ const QuickReplyBox = ({ onSubmit }) => {
       <RichTextEditor ref={editorRef} onChange={setContent} />
       <button
         className="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500 cursor-pointer"
-        onClick={() => onSubmit(content)}
+        onClick={(e) => {
+          e.preventDefault();
+          const message = editorRef.current?.getHTML();
+          onSubmit(message);
+          editorRef.current?.clear();
+        }}
       >
         Reply
       </button>

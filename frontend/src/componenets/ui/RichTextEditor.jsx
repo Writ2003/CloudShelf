@@ -39,6 +39,8 @@ const RichTextEditor = forwardRef(({ onChange, initialContent, placeholderText =
     toggleStrike: () => editor?.chain().focus().toggleStrike().run(),
     undo: () => editor?.chain().focus().undo().run(),
     redo: () => editor?.chain().focus().redo().run(),
+    clear: () => editor?.commands.clearContent(),
+    getHTML: () => editor?.getHTML(),
   }));
 
   return (

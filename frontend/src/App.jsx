@@ -21,7 +21,7 @@ function App() {
             <Route index element={<Dashboard/>}/>
             <Route path='bookinfo/:bookid' element={<BookInfo/>}/>
             <Route path='readbook/:bookid' element={<ReadBook/>}/>
-            <Route path='discussion/:discussionId' element={<Discussion/>} />
+            <Route path='book/:bookId/discussion/:discussionId' element={<Discussion/>} />
           </Route>
         </Route>
       </Routes>

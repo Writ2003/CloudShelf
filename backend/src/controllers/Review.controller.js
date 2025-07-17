@@ -31,7 +31,7 @@ export const addReview = async (req, res) => {
       comment
     });
     await review.save();
-
+    review = (await review.populate('user','username email')).toObject();
     res.status(201).json({ message: 'Review added successfully.', review });
   } catch (err) {
     console.error('[Add Review Error]', err);
@@ -78,7 +78,7 @@ export const updateReview = async (req, res) => {
     if (typeof rating === 'number') review.rating = rating;
 
     await review.save();
-
+    review = (await review.populate('user','username email')).toObject();
     res.status(200).json({ message: 'Review updated successfully.', review });
   } catch (err) {
     console.error('[Update Review Error]', err);
@@ -97,7 +97,7 @@ export const fetchAllReviews = async (req, res) => {
     const totalReviews = await Review.countDocuments({ bookId });
 
     const rawReviews = await Review.find({ bookId })
-      .populate('user', 'name email')
+      .populate('user', 'username email')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -139,7 +139,7 @@ export const fetchAllReviews = async (req, res) => {
     
       return {
         _id: review._id,
-        user: review.user.name || review.user.email,
+        user: review.user.username || review.user.email,
         text: review.comment,
         createdAt: Dayjs(review.createdAt).fromNow(),
         updatedAt: Dayjs(review.updatedAt).fromNow(),

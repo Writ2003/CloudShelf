@@ -1,5 +1,9 @@
 import DiscussionMessage from "../models/DiscussionMessage.model.js";
-import dayjs from "../utils/Dayjs.util.js";
+import dayjs from "dayjs";
+
+const formatDate = (mongoDate) => {
+  return dayjs(mongoDate).format("HH:mm DD/MM/YY");
+};
 
 export const getMessagesByTopic = async (req, res) => {
   try {
@@ -8,20 +12,22 @@ export const getMessagesByTopic = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
+    const totalMessages = await DiscussionMessage.countDocuments({topicId});
+
     const messages = await DiscussionMessage.find({ topicId })
-      .populate("user", "name")
+      .populate("user", "username email")
       .sort({ createdAt: -1 }) // newest first
       .skip(skip)
       .limit(limit);
 
     const formattedMessages = messages.map(msg => ({
       _id: msg._id,
-      user: msg.user,
+      user: msg.user.username || msg.user.email,
       text: msg.text,
-      createdAgo: dayjs(msg.createdAt).fromNow(),
+      createdAgo: formatDate(msg.createdAt),
     }));
 
-    res.status(200).json(formattedMessages);
+    res.status(200).json({messages: formattedMessages, totalMessages});
   } catch (error) {
     console.error("Error fetching messages:", error);
     res.status(500).json({ message: "Failed to fetch messages" });
