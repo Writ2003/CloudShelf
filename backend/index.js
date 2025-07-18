@@ -8,6 +8,7 @@ import { Server } from 'socket.io';
 
 import './src/cron/resetWeeklyReaders.js';
 import initDiscussionSocket from './src/sockets/discussion.socket.js';
+import initCoupleSocket from './src/sockets/couple.socket.js';
 
 dotenv.config();
 
@@ -23,6 +24,9 @@ const io = new Server(server, {
 
 const discussionNamespace = io.of("/discussion");
 initDiscussionSocket(discussionNamespace);
+const coupleNameSpace = io.of("/couple");
+initCoupleSocket(coupleNameSpace);
+
 // Middleware
 app.use(cors({
   origin: 'http://localhost:5173',

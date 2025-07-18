@@ -26,7 +26,7 @@ export default (io) => {
     });
 
     socket.on("discussion_send_message", async (data) => {
-      const { topicId, message, userId, timestamp, username } = data;
+      const { topicId, message, userId, timestamp, username , totalMessages} = data;
       const room = `topic_${topicId}`;
       try {
         const currentMessage = await DiscussionMessage.create({
@@ -39,7 +39,8 @@ export default (io) => {
           _id: currentMessage._id,
           user: username,
           text: currentMessage.text,
-          timestamp: formatDate(currentMessage.createdAt)
+          timestamp: formatDate(currentMessage.createdAt),
+          totalMessages
         });
       } catch (err) {
         console.error('Socket message error:', err);

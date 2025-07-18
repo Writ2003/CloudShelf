@@ -5,11 +5,20 @@ export default function initCoupleSocket(io) {
     // Join a couple room based on book + coupleId
     socket.on('join_couple_room', ({ coupleId, bookId }) => {
       const roomId = `couple_${bookId}_${coupleId}`;
+      console.log(`room Id: ${roomId}`);
       socket.join(roomId);
       socket.roomId = roomId;
 
+      const roomSize = io.adapter.rooms.get(roomId)?.size || 0;
+      console.log(roomSize);
+      if (roomSize === 2) {
+        io.to(roomId).emit("couple_ready", { message: "Both users connected" });
+      } else if (roomSize > 2) {
+        socket.leave(roomId);
+        socket.emit("room_full", { message: "This couple room already has 2 users." });
+      }
+
       console.log(`User ${socket.id} joined room ${roomId}`);
-      io.to(roomId).emit('user_joined', { socketId: socket.id });
     });
 
     // Page Sync (One user turns page, other follows)

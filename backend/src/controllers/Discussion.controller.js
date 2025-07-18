@@ -24,7 +24,7 @@ export const getMessagesByTopic = async (req, res) => {
       _id: msg._id,
       user: msg.user.username || msg.user.email,
       text: msg.text,
-      createdAgo: formatDate(msg.createdAt),
+      timestamp: formatDate(msg.createdAt),
     }));
 
     res.status(200).json({messages: formattedMessages, totalMessages});

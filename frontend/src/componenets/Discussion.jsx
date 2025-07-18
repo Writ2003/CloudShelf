@@ -28,7 +28,8 @@ const Discussion = () => {
       userId: user._id,
       message: newHTMLContent, // Assuming QuickReplyBox gives HTML or text
       timestamp: Date.now(),
-      username: user.username
+      username: user.username,
+      totalMessages: messages.length+1
     };
 
     discussionSocket.emit("discussion_send_message", newMessage);
@@ -37,6 +38,25 @@ const Discussion = () => {
     scrollToBottom();
     console.log('Submit:', newHTMLContent);
   };
+
+  useEffect(() => {
+    const fetchMessages = async() => {
+      setMessagesLoading(true);
+      try {
+        const response = await axios.get(`http://localhost:5000/api/discussionMessages/get/${discussionId}`,{withCredentials: true});
+        console.log(response.data);
+        setMessages(response.data.messages);
+        const totalPages = Math.ceil(response.data.messages.length/5);
+        setPageInfo({currentPage: totalPages, totalPages, totalMessages:response.data.totalMessages})
+      } catch (error) {
+        console.log('Error while fetching messages, error: ',error?.response?.data?.message || error.message)
+      } finally {
+        setMessagesLoading(false);
+      }
+    };
+
+    fetchMessages();
+  },[])
 
   useEffect(() => {
     let isMounted = true;
@@ -63,7 +83,9 @@ const Discussion = () => {
 
         // ✅ Listen for incoming messages
         discussionSocket.on("discussion_receive_message", (data) => {
-          setMessages((prev) => [...prev, data]);
+          setMessages((prev) => [ data,...prev]);
+          const totalPages = Math.ceil(data?.totalMessages/5);
+          setPageInfo(prev => ({...prev,totalPages, currentPage: totalPages}));
           scrollToBottom();
         });
       } catch (error) {
@@ -77,22 +99,6 @@ const Discussion = () => {
     };
 
     fetchUserAndJoin();
-
-    const fetchMessages = async() => {
-      setMessagesLoading(true);
-      try {
-        const response = await axios.get(`http://localhost:5000/api/discussionMessages/get/${discussionId}`,{withCredentials: true});
-        setMessages(response.data.messages);
-        const totalPages = ceil(response.data.messages.length/5);
-        setPageInfo({currentPage: totalPages, totalPages, totalMessages:response.data.totalMessages})
-      } catch (error) {
-        console.log('Error while fetching messages, error: ',error?.response?.data?.message || error.message)
-      } finally {
-        setMessagesLoading(false);
-      }
-    }
-
-    fetchMessages();
 
     return () => {
       isMounted = false;
@@ -110,13 +116,13 @@ const Discussion = () => {
   }, [discussionId, bookId]);
 
   const onPageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+    setPageInfo(prev => ({...prev, currentPage: pageNumber}));
   }
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-gray-50 my-3 rounded-lg shadow-xl">
-      {!messagesLoading && messages && messages.slice((pageInfo.currentPage-1)*5,pageInfo.currentPage*5).map((message) => (
-        <PostCard key={message._id || message.timestamp} post={message}/>
-      ))}
+    <div className="p-6 max-w-4xl mx-auto bg-gray-50 my-3 rounded-lg shadow- shadow-xl border-2 border-l-orange-400 border-t-red-500 border-r-yellow-400 border-b-blue-600">
+      {(!messagesLoading && messages?.length > 0 ) ? messages.slice((pageInfo.totalPages-pageInfo.currentPage)*5,(pageInfo.totalPages-pageInfo.currentPage+1)*5).reverse().map((message, ind) => (
+        <PostCard key={message._id || message.timestamp} post={message} ind={ind}/>
+      )): <p className='h-80 flex items-center justify-center font-bold tracking-wider text-xl font-serif'><span className='bg-blue-500 text-white p-3 rounded-xl'>Be the first to message</span></p>}
       <Pagination currentPage={pageInfo.currentPage} totalPages={pageInfo.totalPages} onPageChange={onPageChange}/>
       <div className='flex gap-3'>
         <img src={minion} height={36} width={36} className='mb-auto mt-10 rounded-full ml-3 ring ring-amber-500 ring-offset-2'/>

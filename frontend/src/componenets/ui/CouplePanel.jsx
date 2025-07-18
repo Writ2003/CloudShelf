@@ -15,11 +15,13 @@ export default function CouplePanel({ bookId, onJoin }) {
 
   const handleCopyCoupleId = () => {
     navigator.clipboard.writeText(coupleId);
+    onJoin(coupleId);
   };
 
   const handleCopyLink = () => {
-    const link = `${window.location.origin}/read/${bookId}?coupleId=${coupleId}`;
+    const link = `${window.location.origin}/readbook/${bookId}?coupleId=${coupleId}`;
     navigator.clipboard.writeText(link);
+    onJoin(coupleId);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500); // Hide after 1.5s
   }
@@ -44,7 +46,7 @@ export default function CouplePanel({ bookId, onJoin }) {
       <div className="text-sm text-gray-500 w-full p-4">
         <p className="font-medium mb-2">Share this link:</p>
         <button className='relative break-words break-all whitespace-normal text-sm font-normal cursor-pointer text-blue-500 underline' onClick={handleCopyLink}>
-          {window.location.origin}/read/{bookId}?coupleId={coupleId}
+          {window.location.origin}/readbook/{bookId}?coupleId={coupleId}
           {/* Tooltip */}
           {copied && (
             <div className="absolute translate-x-full bg-black text-white text-xs rounded p-2 shadow-md">

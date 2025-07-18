@@ -15,6 +15,10 @@ import RemoveRoundedIcon from '@mui/icons-material/RemoveRounded';
 import BorderColorRoundedIcon from '@mui/icons-material/BorderColorRounded';
 import axios from 'axios';
 import CouplePanel from './ui/CouplePanel'
+import { useSearchParams } from 'react-router-dom';
+import { coupleSocket } from '../socket';
+import { toast, ToastContainer } from 'react-toastify';
+import CoupleChatAndCall from './ui/CoupleChatAndCall';
 
 const tintClasses = {
   default: "bg-white text-black",
@@ -42,7 +46,11 @@ const ReadBook = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [displayHTML, setDisplayHTML] = useState('');
     const [textSize, setTextSize] = useState('base');
-    const audioRef = useRef(null); 
+    const audioRef = useRef(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const coupleIdParam = searchParams.get('coupleId');
+    const [coupleId, setCoupleId] = useState('');
+    const [hasCoupleJoined, setHasCoupleJoined] = useState(false); 
 
     const increaseTextSize = () => {
       const index = fontSizes.indexOf(textSize);
@@ -57,54 +65,81 @@ const ReadBook = () => {
       }
     };
     const applyHighlight = () => {
-        const selection = window.getSelection();
-        if (!selection.rangeCount) return;
-
-        const range = selection.getRangeAt(0);
-        const selectedText = selection.toString();
-
-        if (!selectedText.trim()) return;
-
-        try {
-            const span = document.createElement('span');
-            span.style.backgroundColor = '#fff59d'; // soft yellow
-            span.classList.add('highlighted');
-            range.surroundContents(span);
-            selection.removeAllRanges();  // clear selection
-
-            const updatedHTML = document.getElementById('page-content').innerHTML;
-            localStorage.setItem(`highlight-${bookid}-${currentPage}`, updatedHTML);
-        } catch (err) {
-            console.warn('Highlight failed:', err.message);
-        }
+      const selection = window.getSelection();
+      if (!selection.rangeCount) return;
+      const range = selection.getRangeAt(0);
+      const selectedText = selection.toString();
+      if (!selectedText.trim()) return;
+      try {
+        const span = document.createElement('span');
+        span.style.backgroundColor = '#fff59d'; // soft yellow
+        span.classList.add('highlighted');
+        range.surroundContents(span);
+        selection.removeAllRanges();  // clear selection
+        const updatedHTML = document.getElementById('page-content').innerHTML;
+        localStorage.setItem(`highlight-${bookid}-${currentPage}`, updatedHTML);
+      } catch (err) {
+        console.warn('Highlight failed:', err.message);
+      }
     };
     const getPreviousPage = () => {
-        if(currentPage > 1) {
-            let previous = currentPage - 1;
-            setCurrentPage(previous);
-        }
+      if(currentPage > 1) {
+        let previous = currentPage - 1;
+        setCurrentPage(previous);
+      }
     }
     const getNextPage = () => {
-        if(currentPage < totalPages) {
-            let next = currentPage + 1;
-            setCurrentPage(next);
-        }
+      if(currentPage < totalPages) {
+        let next = currentPage + 1;
+        setCurrentPage(next);
+      }
     }
     const handlePageInput = (e) => {
-        const pageNumber = e.target.value;
-        if(pageNumber <= 0 || pageNumber > totalPages) return;
-        setCurrentPage(pageNumber);
+      const pageNumber = e.target.value;
+      if(pageNumber <= 0 || pageNumber > totalPages) return;
+      setCurrentPage(pageNumber);
     }
     useEffect(() => {
-        const fetchBook = async() => {
-            try {
-                
-            } catch (error) {
-                
-            }
+      const fetchBook = async() => {
+        try {
+            
+        } catch (error) {
+            
         }
-        fetchBook();
+      }
+      fetchBook();
     },[])
+    const onJoin = (finalCoupleId) => {
+      console.log('Couple Id: ',finalCoupleId)
+      coupleSocket.emit("join_couple_room", { bookId: bookid, coupleId: finalCoupleId });
+      setCoupleId(finalCoupleId);
+    };
+    useEffect(() => {
+      console.log(coupleIdParam);
+      if(coupleIdParam) {
+        setCoupleId(coupleIdParam);
+        coupleSocket.emit('join_couple_room', { bookId: bookid, coupleId: coupleIdParam });
+        console.log('Couple joined');
+      }
+      const handleCoupleReady = (data) => {
+        toast.success(data.message);
+        setHasCoupleJoined(true);
+      };
+    
+      coupleSocket.on('couple_ready', handleCoupleReady);
+
+      coupleSocket.on("user_disconnected", ({ socketId }) => {
+        console.log(`⚠️ User disconnected: ${socketId}`);
+        setHasCoupleJoined(false);
+      });
+    
+      // Cleanup listener on unmount
+      return () => {
+        coupleSocket.off('couple_ready', handleCoupleReady);
+        coupleSocket.off('user_disconnected');
+        coupleSocket.disconnect();
+      };
+    },[coupleSocket, bookid])
     useEffect(() => {
         const cached = localStorage.getItem(`highlight-${bookid}-${currentPage}`);
         if (cached) {
@@ -171,6 +206,41 @@ const ReadBook = () => {
       };
     }, [currentPage, getNextPage, getPreviousPage]);
 
+    const sendPageChange = (page) => {
+      if (!hasCoupleJoined) return;
+      coupleSocket.emit("couple_page_change", { page });
+    };
+
+    const onPageChange = (callback) => {
+      coupleSocket.on("sync_page_change", ({ page }) => {
+        callback(page);
+      });
+    };
+
+    const sendOffer = (offer) => {
+      coupleSocket.emit("couple_webrtc_offer", offer);
+    };
+
+    const onOffer = (callback) => {
+      coupleSocket.on("couple_webrtc_offer", callback);
+    };
+
+    const sendAnswer = (answer) => {
+      coupleSocket.emit("couple_webrtc_answer", answer);
+    };
+
+    const onAnswer = (callback) => {
+      coupleSocket.on("couple_webrtc_answer", callback);
+    };
+
+    const sendCandidate = (candidate) => {
+      coupleSocket.emit("couple_webrtc_candidate", candidate);
+    };
+
+    const onCandidate = (callback) => {
+      coupleSocket.on("couple_webrtc_candidate", callback);
+    };
+
   return (
     <div className="h-screen flex flex-col">
       {/* Header / Toolbar */}
@@ -219,7 +289,7 @@ const ReadBook = () => {
                 {isMarked ? <BookmarkIcon /> : <BookmarkAddOutlinedIcon />}
               </IconButton>
             </Tooltip>
-            <Tooltip title="Couple Mode">
+            {!(coupleIdParam || hasCoupleJoined) && <Tooltip title="Couple Mode">
               <IconButton
                 sx={{ borderRadius: "50%", padding: "20px", width: "40px", height: "40px" }}
                 onClick={() => setIsCoupleModeActive(prev => !prev)}
@@ -227,6 +297,7 @@ const ReadBook = () => {
                 {!isCoupleModeActive ? <HouseRoundedIcon /> : <CancelRoundedIcon />}
               </IconButton>
             </Tooltip>
+            }
             <Tooltip title="Text to Speech">
               <IconButton
                 sx={{ borderRadius: "50%", padding: "20px", width: "40px", height: "40px" }}
@@ -258,15 +329,30 @@ const ReadBook = () => {
               <div id="page-content" dangerouslySetInnerHTML={{ __html: displayHTML }} />
             )*/}
           </div>
-          {isCoupleModeActive && (
+          {isCoupleModeActive && !(coupleIdParam || hasCoupleJoined) ? (
           <CouplePanel
             bookId={bookid}
-            onJoin={(finalCoupleId) => {
-              socket.emit("join_couple_room", { bookid, coupleId: finalCoupleId });
-              setCoupleId(finalCoupleId);
-            }}
+            onJoin={onJoin}
           />
-        )}
+        ): <CoupleChatAndCall
+              hasCoupleJoined={hasCoupleJoined}
+              onSendMessage={(text) => coupleSocket.emit("send_message", { text, coupleId, bookId })}
+              onReceiveMessage={(callback) =>
+                coupleSocket.on("new_message", ({ text }) => callback(text))
+              }
+              sendOffer={(offer) => coupleSocket.emit("couple_webrtc_offer", offer)}
+              onOffer={(callback) => coupleSocket.on("couple_webrtc_offer", callback)}
+              sendAnswer={(answer) => coupleSocket.emit("couple_webrtc_answer", answer)}
+              onAnswer={(callback) => coupleSocket.on("couple_webrtc_answer", callback)}
+              sendCandidate={(candidate) =>
+                coupleSocket.emit("couple_webrtc_candidate", candidate)
+              }
+              onCandidate={(callback) =>
+                coupleSocket.on("couple_webrtc_candidate", callback)
+              }
+            />
+
+        }
         </div>
         <div className="fixed bottom-44 right-6 z-50">
           <Tooltip title="Highlight Selection" placement='top-start' arrow>
@@ -304,8 +390,9 @@ const ReadBook = () => {
             </IconButton>
           </div>
         </div>
+        <ToastContainer position='top-center'/>
     </div>
   )
-}
+};
 
 export default ReadBook
