@@ -6,7 +6,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Mention from '@tiptap/extension-mention';
 import { forwardRef, useImperativeHandle, useState } from 'react';
 
-const RichTextEditor = forwardRef(({ onChange, initialContent, placeholderText = 'Type something...', maxCharLimit }, ref) => {
+const RichTextEditor = forwardRef(({ onChange, initialContent, placeholderText = 'Type something...', maxCharLimit, className}, ref) => {
   const [charCount, setCharCount] = useState(0);
   const editor = useEditor({
     extensions: [StarterKit.configure({ history: true }), Underline, Placeholder.configure({
@@ -45,7 +45,7 @@ const RichTextEditor = forwardRef(({ onChange, initialContent, placeholderText =
 
   return (
     <div>
-      <EditorContent ref={ref} editor={editor} className={`ProseMirror border border-gray-300 bg-gray-50 text-black rounded-md p-3 ${!maxCharLimit ?'min-h-[150px]': 'h-20'}`}/>
+      <EditorContent ref={ref} editor={editor} className={`ProseMirror border border-gray-300 bg-gray-50 text-black rounded-md p-3 ${!maxCharLimit ?'min-h-[150px]': className}`}/>
       <p className="text-xs text-right text-gray-400 mt-1">
         {maxCharLimit ? `${charCount}/${maxCharLimit}` :'' }
       </p>

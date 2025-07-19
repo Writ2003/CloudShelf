@@ -135,9 +135,9 @@ const ReadBook = () => {
     
       // Cleanup listener on unmount
       return () => {
-        coupleSocket.off('couple_ready', handleCoupleReady);
+        coupleSocket.off('couple_ready');
         coupleSocket.off('user_disconnected');
-        coupleSocket.disconnect();
+        coupleSocket.off();
       };
     },[coupleSocket, bookid])
     useEffect(() => {
@@ -329,16 +329,17 @@ const ReadBook = () => {
               <div id="page-content" dangerouslySetInnerHTML={{ __html: displayHTML }} />
             )*/}
           </div>
-          {isCoupleModeActive && !(coupleIdParam || hasCoupleJoined) ? (
-          <CouplePanel
-            bookId={bookid}
-            onJoin={onJoin}
-          />
-        ): <CoupleChatAndCall
+          {isCoupleModeActive && !(coupleIdParam || hasCoupleJoined) && (
+            <CouplePanel
+              bookId={bookid}
+              onJoin={onJoin}
+            />
+          )}
+          {hasCoupleJoined && <CoupleChatAndCall
               hasCoupleJoined={hasCoupleJoined}
-              onSendMessage={(text) => coupleSocket.emit("send_message", { text, coupleId, bookId })}
+              onSendMessage={(text) => coupleSocket.emit("couple_send_message", { text, coupleId, bookId:bookid })}
               onReceiveMessage={(callback) =>
-                coupleSocket.on("new_message", ({ text }) => callback(text))
+                coupleSocket.on("couple_receive_message", ({ text }) => {console.log(text);callback(text)})
               }
               sendOffer={(offer) => coupleSocket.emit("couple_webrtc_offer", offer)}
               onOffer={(callback) => coupleSocket.on("couple_webrtc_offer", callback)}
@@ -351,10 +352,9 @@ const ReadBook = () => {
                 coupleSocket.on("couple_webrtc_candidate", callback)
               }
             />
-
-        }
+          }
         </div>
-        <div className="fixed bottom-44 right-6 z-50">
+        <div className="fixed bottom-34 right-6 z-50">
           <Tooltip title="Highlight Selection" placement='top-start' arrow>
               <IconButton
                 onClick={applyHighlight}
@@ -371,7 +371,7 @@ const ReadBook = () => {
           </Tooltip>
         </div>
 
-        <div className="fixed bottom-16 right-4 z-50">
+        <div className="fixed bottom-8 right-4 z-50">
           <div className="flex flex-col-reverse items-center gap-1 border rounded-md px-2 py-1 bg-white shadow-md">
             <IconButton
               size="small"

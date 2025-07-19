@@ -21,6 +21,12 @@ export default function initCoupleSocket(io) {
       console.log(`User ${socket.id} joined room ${roomId}`);
     });
 
+    socket.on('couple_send_message', ({ text, coupleId, bookId:bookid }) => {
+      if (!socket.roomId) return;
+      console.log(text);
+      socket.to(socket.roomId).emit('couple_receive_message', { text } );
+    })
+
     // Page Sync (One user turns page, other follows)
     socket.on('couple_page_change', ({ page }) => {
       if (!socket.roomId) return;
