@@ -46,6 +46,11 @@ export default function initCoupleSocket(io) {
       socket.to(socket.roomId).emit('couple_webrtc_candidate', data);
     });
 
+    socket.on("couple_end_call", () => {
+      if (!socket.roomId) return;
+      socket.to(socket.roomId).emit("couple_end_call");
+    });
+
     socket.on('disconnect', () => {
       if (socket.roomId) {
         socket.to(socket.roomId).emit('user_disconnected', { socketId: socket.id });

@@ -335,26 +335,40 @@ const ReadBook = () => {
               onJoin={onJoin}
             />
           )}
-          {hasCoupleJoined && <CoupleChatAndCall
+          {hasCoupleJoined && <div className='h-full pb-1'>
+            <CoupleChatAndCall
               hasCoupleJoined={hasCoupleJoined}
               onSendMessage={(text) => coupleSocket.emit("couple_send_message", { text, coupleId, bookId:bookid })}
               onReceiveMessage={(callback) =>
                 coupleSocket.on("couple_receive_message", ({ text }) => {console.log(text);callback(text)})
               }
               sendOffer={(offer) => coupleSocket.emit("couple_webrtc_offer", offer)}
-              onOffer={(callback) => coupleSocket.on("couple_webrtc_offer", callback)}
+              onOffer={(cb) => {
+                coupleSocket.off("couple_webrtc_offer");
+                coupleSocket.on("couple_webrtc_offer", cb);
+              }}
               sendAnswer={(answer) => coupleSocket.emit("couple_webrtc_answer", answer)}
-              onAnswer={(callback) => coupleSocket.on("couple_webrtc_answer", callback)}
+              onAnswer={(cb) => {
+                coupleSocket.off("couple_webrtc_answer");
+                coupleSocket.on("couple_webrtc_answer", cb);
+              }}
               sendCandidate={(candidate) =>
                 coupleSocket.emit("couple_webrtc_candidate", candidate)
               }
-              onCandidate={(callback) =>
-                coupleSocket.on("couple_webrtc_candidate", callback)
-              }
+              onCandidate={(cb) => {
+                coupleSocket.off("couple_webrtc_candidate");
+                coupleSocket.on("couple_webrtc_candidate", cb);
+              }}
+              endCallSignal={() => coupleSocket.emit("couple_end_call")}
+              onEndCallSignal={(cb) => {
+                coupleSocket.off("couple_end_call");
+                coupleSocket.on("couple_end_call", cb);
+              }}
             />
+            </div>
           }
         </div>
-        <div className="fixed bottom-34 right-6 z-50">
+        <div className="fixed bottom-40 right-6 z-50">
           <Tooltip title="Highlight Selection" placement='top-start' arrow>
               <IconButton
                 onClick={applyHighlight}
@@ -371,7 +385,7 @@ const ReadBook = () => {
           </Tooltip>
         </div>
 
-        <div className="fixed bottom-8 right-4 z-50">
+        <div className="fixed bottom-12 right-4 z-50">
           <div className="flex flex-col-reverse items-center gap-1 border rounded-md px-2 py-1 bg-white shadow-md">
             <IconButton
               size="small"

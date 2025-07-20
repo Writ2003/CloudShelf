@@ -8,7 +8,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Call, CallEnd } from "@mui/icons-material";
-import Peer from "simple-peer";
 import RichTextEditor from "./RichTextEditor"; // Your editor
 import { SendHorizonal } from "lucide-react";
 import { coupleSocket } from "../../socket";
@@ -23,6 +22,8 @@ export default function CoupleChatAndCall({
   onAnswer,         // (callback) => callback(answer)
   sendCandidate,    // (candidate) => void
   onCandidate,      // (callback) => callback(candidate)
+  endCallSignal,
+  onEndCallSignal     
 }) {
   const [messages, setMessages] = useState([]);
   const [isCalling, setIsCalling] = useState(false);
@@ -30,11 +31,19 @@ export default function CoupleChatAndCall({
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-  const peerRef = useRef(null);
+  const peerConnectionRef = useRef(null);
   const localStreamRef = useRef(null);
   const [content, setContent] = useState('');
   const editorRef = useRef();
+  const messagesEndRef = useRef(null);
 
+  // ✅ Scroll to latest message
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+  
   // ✅ Handle Incoming Messages
   useEffect(() => {
     if (!onReceiveMessage) return;
@@ -49,86 +58,136 @@ export default function CoupleChatAndCall({
   };
   }, [onReceiveMessage]);
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   // ✅ Handle WebRTC Incoming Events
   useEffect(() => {
     if (!onOffer || !onAnswer || !onCandidate) return;
 
-    onOffer(async (offer) => {
-      console.log("📞 Incoming call...");
-      await initCall(false, offer);
-    });
-
-    onAnswer((answer) => {
-      console.log("✅ Call Answered");
-      peerRef.current?.signal(answer);
-    });
-
-    onCandidate((candidate) => {
-      peerRef.current?.signal(candidate);
-    });
+    onOffer(handleOffer);
+    onAnswer(handleAnswer);
+    onCandidate(handleCandidate);
   }, [onOffer, onAnswer, onCandidate]);
 
-  // ✅ Start Call
-  const startCall = async () => {
-    setIsCalling(true);
-    await initCall(true);
+  useEffect(() => {
+    if (!onEndCallSignal) return;
+
+    onEndCallSignal(() => {
+      console.log("📞 Other user ended the call");
+      endCall();
+    });
+  }, [onEndCallSignal]);
+
+  const iceServers = {
+    iceServers: [
+      { urls: "stun:stun.l.google.com:19302" }, // free Google STUN server
+    ],
   };
 
-  // ✅ Initialize Call (Caller or Receiver)
-  const initCall = async (isCaller, offer = null) => {
-    try {
-      localStreamRef.current = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+  // ✅ Start Call (Caller)
+  const startCall = async () => {
+    setIsCalling(true);
 
-      localVideoRef.current.srcObject = localStreamRef.current;
-      console.log("Peer created", { isCaller });
-      console.log("Local stream attached?", localStreamRef.current);
-      const testPeer = new Peer({ initiator: true });
-      testPeer.on("signal", console.log);
+    localStreamRef.current = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+    localVideoRef.current.srcObject = localStreamRef.current;
 
+    peerConnectionRef.current = new RTCPeerConnection(iceServers);
 
-      /*peer.on("signal", (data) => {
-        console.log("SIGNAL DATA:", data); // ✅ Should log offer first
-        if (data.type === "offer") sendOffer && sendOffer(data);
-        else if (data.type === "answer") sendAnswer && sendAnswer(data);
-        else if (data.candidate) sendCandidate && sendCandidate(data);
-        console.log('Signalling offer');
-      });
+    // Add local tracks
+    localStreamRef.current.getTracks().forEach((track) => {
+      peerConnectionRef.current.addTrack(track, localStreamRef.current);
+    });
 
-      peer.on("stream", (remoteStream) => {
-        console.log("📹 Remote stream received");
-        remoteVideoRef.current.srcObject = remoteStream;
-      });
+    // Remote stream
+    peerConnectionRef.current.ontrack = (event) => {
+      console.log("📹 Remote stream received");
+      remoteVideoRef.current.srcObject = event.streams[0];
+    };
 
-      peer.on("close", endCall);
-
-      if (!isCaller && offer) {
-        peer.signal(offer);
+      // ICE candidates
+    peerConnectionRef.current.onicecandidate = (event) => {
+      if (event.candidate) {
+        sendCandidate && sendCandidate(event.candidate);
       }
+    };
 
-      peerRef.current = peer;*/
-      setInCall(true);
-      setIsCalling(false);
-    } catch (err) {
-      console.error("Call Error:", err);
-      setIsCalling(false);
+    // Create and send offer
+    const offer = await peerConnectionRef.current.createOffer();
+    await peerConnectionRef.current.setLocalDescription(offer);
+    sendOffer && sendOffer(offer);
+
+    setInCall(true);
+    setIsCalling(false);
+  }
+
+  // ✅ Handle Incoming Offer (Receiver)
+  const handleOffer = async (offer) => {
+    console.log("📞 Incoming call...");
+    localStreamRef.current = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+    localVideoRef.current.srcObject = localStreamRef.current;
+
+    peerConnectionRef.current = new RTCPeerConnection(iceServers);
+
+    localStreamRef.current.getTracks().forEach((track) => {
+      peerConnectionRef.current.addTrack(track, localStreamRef.current);
+    });
+
+    peerConnectionRef.current.ontrack = (event) => {
+      remoteVideoRef.current.srcObject = event.streams[0];
+    };
+
+    peerConnectionRef.current.onicecandidate = (event) => {
+      if (event.candidate) {
+        sendCandidate && sendCandidate(event.candidate);
+      }
+    };
+
+    await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
+
+    const answer = await peerConnectionRef.current.createAnswer();
+    await peerConnectionRef.current.setLocalDescription(answer);
+    sendAnswer && sendAnswer(answer);
+
+    setInCall(true);
+  };
+
+  // ✅ Handle Answer (Caller)
+  const handleAnswer = async (answer) => {
+    await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+  };
+
+  // ✅ Handle ICE Candidate (Both)
+  const handleCandidate = async (candidate) => {
+    try {
+      await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (e) {
+      console.error("ICE candidate error", e);
     }
   };
 
   // ✅ End Call
   const endCall = () => {
-    if (peerRef.current) {
-      peerRef.current.destroy();
-      peerRef.current = null;
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
     }
     if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
       localStreamRef.current = null;
     }
     setInCall(false);
     setIsCalling(false);
+
+    // ✅ Notify the other side
+    endCallSignal && endCallSignal();
   };
 
   return (
@@ -142,7 +201,7 @@ export default function CoupleChatAndCall({
           Chat
         </Typography>
         <Divider />
-        <Box className="flex-1 flex flex-col gap-1 overflow-auto no-scrollbar my-2 p-2">
+        <Box className="flex-1 flex flex-col gap-1 max-h-[200px] overflow-auto scroll-smooth no-scrollbar my-2 p-2">
           {messages.map((msg, i) => (
             <Typography
               key={i}
@@ -157,6 +216,7 @@ export default function CoupleChatAndCall({
               <div dangerouslySetInnerHTML={{__html: msg.content}}/>
             </Typography>
           ))}
+          <div ref={messagesEndRef}></div>
         </Box>
         <Box className='grid grid-cols-5 gap-3 items-center'>
           <div className="col-span-4 rounded-md border border-slate-200">
