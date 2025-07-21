@@ -9,7 +9,7 @@ router.get('/auth/verify', async(req, res) => {
     try {
       const user = jwt.verify(token, process.env.JWT_SECRET);
       const populatedUser = await User.findById(user.userId).select('-password -createdAt -updatedAt -history -favouriteBooks');
-      res.json({ authenticated: true, user, populatedUser });
+      res.json({ authenticated: true, user, populatedUser, userType: populatedUser.userType });
     } catch (err) {
       res.status(403).json({ message: 'Invalid token' });
     }

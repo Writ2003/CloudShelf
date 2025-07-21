@@ -3,6 +3,7 @@ import User from "../models/User.model.js";
 import BookContent from "../models/BookContent.model.js";
 import redis from "../utils/redisClient.util.js"
 import { processPDF } from "../utils/extractPDF.util.js";
+import uploadToS3 from "../utils/awsS3Upload.util.js";
 import axios from 'axios';
 
 const cardLimits = {
@@ -181,18 +182,18 @@ export const getBookContent = async(req,res) => {
   const userId = req.user._id;
   const { offset = 0, limit = 15 } = req.query;
   try {
-    const cacheKey = `book:${bookId}:chunk:${offset}-${parseInt(offset) + parseInt(limit)}`;
+    /*const cacheKey = `book:${bookId}:chunk:${offset}-${parseInt(offset) + parseInt(limit)}`;
 
     const cached = await redis.get(cacheKey);
     if (cached) {
       console.log('📦 Served from Redis');
       return res.status(200).json(JSON.parse(cached));
-    }
+    }*/
     const book = await BookContent.findOne({ bookId });
     const paginatedContent = book.content.slice(offset, offset + limit);
     
     data = {totalPages: book.totalPages, pages: paginatedContent};
-    await redis.set(cacheKey, JSON.stringify(data), 'EX', 3600);
+    //await redis.set(cacheKey, JSON.stringify(data), 'EX', 3600);
     res.status(200).json({
       totalPages: book.totalPages,
       pages: paginatedContent
@@ -206,10 +207,14 @@ export const uploadBookContent = async(req,res) => {
   const { bookId } = req.params;
   const filePath = req.file.path; // multer must be configured
     if (!filePath) {
-    return res.status(400).json({ message: 'No file uploaded' });
-  }
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
   try {
+    console.log('File: ',req?.file);
     // Extract HTML pages from the PDF
+    const result = await uploadToS3(req?.file);
+    if(!result) return res.status(400).json({message: "Couldn't upload file"});
+    await Book.findByIdAndUpdate(bookId, {url: result});
     const htmlPages = await processPDF(filePath);
 
     if (!htmlPages || htmlPages.length === 0) {
@@ -242,4 +247,4 @@ export const uploadBookContent = async(req,res) => {
     console.error('❌ Error uploading book content:', error);
     res.status(500).json({ message: "Internal server error while uploading book content" });
   }
-}
+};

@@ -22,7 +22,11 @@ const Login = () => {
       console.log(response.data.message);
       toast.success(response.data.message);
       setTimeout(() => {
-        navigate("/",{replace:true});
+        if (response.data.user.userType === "Reader") {
+          navigate("/reader");
+        } else if (response.data.user.userType === "Admin") {
+          navigate("/admin");
+        }
       },1000);
     } catch (error) {
       if(error.status>=400 && error.status<500) toast.error("User not found!");

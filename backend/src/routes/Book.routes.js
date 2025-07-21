@@ -4,7 +4,7 @@ import upload  from '../middlewares/multer.middleware.js'
 import verifyToken from "../middlewares/verifyJWT.js";
 const router = Router();
 
-router.post('/addNewBook',verifyToken,upload.single('image'),addNewBook);
+router.post('/addNewBook',verifyToken,upload.single("image"),addNewBook);
 router.get('/popular', getPopularBook);
 router.post('/read/:bookId',verifyToken, incrementReadership);
 router.get('/read/getContent/:bookId',verifyToken,getBookContent);
