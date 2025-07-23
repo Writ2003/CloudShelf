@@ -10,7 +10,9 @@ import ReadBook from './componenets/ReadBook'
 import Discussion from './componenets/Discussion'
 import AdminLayout from './AdminLayout'
 import AdminDashboard from './componenets/AdminDashboard'
+import AddBookForm from './componenets/AddBookForm'
 import { Navigate } from 'react-router-dom'
+import useAuth from './hooks/useAuth'
 
 function App() {
 
@@ -33,9 +35,9 @@ function App() {
         <Route element={<ProtectedRoute allowedUser="Admin" />}>
           <Route path='/admin' element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
+            <Route path='addbook' element={<AddBookForm />} />
           </Route>
         </Route>
-        
       </Routes>
     </BrowserRouter>
   )
