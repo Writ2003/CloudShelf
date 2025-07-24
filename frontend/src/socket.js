@@ -5,10 +5,12 @@ const COUPLE_SOCKET_URL = "http://localhost:5000/couple"
 
 export const discussionSocket = io(DISCUSSION_SOCKET_URL, {
   withCredentials: true, // required since you are whitelisting IP
-  transports: ["websocket"]
+  transports: ["websocket"],
+  autoConnect: false
 });
 
 export const coupleSocket = io(COUPLE_SOCKET_URL, {
   withCredentials: true,
-  transports: ["websocket"]
+  transports: ["websocket"],
+  autoConnect: false
 })
