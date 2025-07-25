@@ -27,7 +27,7 @@ export const getAuthor = async(req,res) => {
           ]
         });
 
-        res.status(200).json({results});
+        res.status(200).json({authors: results});
     } catch (error) {
         console.error('Error while fetching author, error: ',error);
          res.status(500).json({message: 'Server error while fetching author'});   

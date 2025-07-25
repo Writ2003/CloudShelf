@@ -15,6 +15,7 @@ const AddBookForm = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [showAuthorCard, setShowAuthorCard] = useState(false);
   const [newAuthor, setNewAuthor] = useState({ name: "", id: "" });
+  const [authorResults, setAuthorResults] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -79,9 +80,26 @@ const AddBookForm = () => {
     // Auto-fill the author field after successful add
     //setFormData((prev) => ({ ...prev, author: newAuthor.name }));
     // Reset and close card
-    setNewAuthor({ name: "", id: "" });
-    setShowAuthorCard(false);
+    try {
+      const response = await axios.post(`http://localhost:5000/author/addAuthor`,{name: newAuthor?.name, authorId:newAuthor?.id},{withCredentials: true});
+      setFormData((prev) => ({ ...prev, author: newAuthor.name }));
+    } catch (error) {
+      console.error('Error while posting new author, error: ',error?.response?.data?.message || error?.message);
+    } finally {
+      setNewAuthor({ name: "", id: "" });
+      setShowAuthorCard(false);
+    }
   };
+
+  const fetchAuthor = async(value) => {
+    e.preventDefault();
+    try {
+      const response = await axios.get(`http://localhost:5000/author/getAuthor?serachQuery=${value}`,{withCredentials: true});
+      setAuthorResults(response.data.authors);
+    } catch (error) {
+      console.error('Error while fetching author, error: ',error?.response?.data?.message || error?.message)
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto bg-gradient-to-t from-amber-100 to-amber-400 shadow-2xl rounded-2xl p-8 mt-10">
