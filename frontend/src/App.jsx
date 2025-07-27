@@ -11,6 +11,7 @@ import Discussion from './componenets/Discussion'
 import AdminLayout from './AdminLayout'
 import AdminDashboard from './componenets/AdminDashboard'
 import AddBookForm from './componenets/AddBookForm'
+import AddBookContent from './componenets/AddBookContent'
 import { Navigate } from 'react-router-dom'
 import useAuth from './hooks/useAuth'
 
@@ -36,6 +37,7 @@ function App() {
           <Route path='/admin' element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path='addbook' element={<AddBookForm />} />
+            <Route path='addcontent' element={<AddBookContent/>} />
           </Route>
         </Route>
       </Routes>
