@@ -15,30 +15,30 @@ const AdminDashboard = () => {
             <p className='text-2xl font-bold'>Add Book</p>
           </div>
         </Link>
-        <div className='cursor-pointer bg-gradient-to-br from-green-300 to-green-500 p-6 rounded-2xl shadow-md'>
+        <Link to='addcontent' className='cursor-pointer bg-gradient-to-br from-green-300 to-green-500 p-6 rounded-2xl shadow-md'>
           <div className='flex items-center justify-evenly text-white gap-6'>
             <div className='flex justify-center items-center h-16 w-16 rounded-full bg-white'>
               <BookUp2 className='text-black' size={32}/>
             </div>
             <p className='text-2xl font-bold '>Add Content</p>
           </div>
-        </div>
-        <div className='cursor-pointer bg-gradient-to-br from-red-300 to-red-500 p-6 rounded-2xl shadow-md'>
+        </Link>
+        <Link to='removebook' className='cursor-pointer bg-gradient-to-br from-red-300 to-red-500 p-6 rounded-2xl shadow-md'>
           <div className='flex items-center justify-evenly text-white gap-6'>
             <div className='flex justify-center items-center h-16 w-16 rounded-full bg-white'>
               <BookX className='text-black' size={32}/>
             </div>
             <p className='text-2xl font-bold '>Remove</p>
           </div>
-        </div>
-        <div className='cursor-pointer bg-gradient-to-br from-blue-300 to-blue-500 p-6 rounded-2xl shadow-md'>
+        </Link>
+        <Link to='findbook' className='cursor-pointer bg-gradient-to-br from-blue-300 to-blue-500 p-6 rounded-2xl shadow-md'>
           <div className='flex items-center justify-evenly text-white gap-6'>
             <div className='flex justify-center items-center h-16 w-16 rounded-full bg-white'>
               <Search className='text-black' size={32}/>
             </div>
             <p className='text-2xl font-bold '>Find Book</p>
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   )
