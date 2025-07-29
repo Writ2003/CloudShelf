@@ -182,18 +182,18 @@ export const getBookContent = async(req,res) => {
   const userId = req.user._id;
   const { offset = 0, limit = 15 } = req.query;
   try {
-    /*const cacheKey = `book:${bookId}:chunk:${offset}-${parseInt(offset) + parseInt(limit)}`;
+    const cacheKey = `book:${bookId}:chunk:${offset}-${parseInt(offset) + parseInt(limit)}`;
 
     const cached = await redis.get(cacheKey);
     if (cached) {
       console.log('📦 Served from Redis');
       return res.status(200).json(JSON.parse(cached));
-    }*/
+    }
     const book = await BookContent.findOne({ bookId });
     const paginatedContent = book.content.slice(offset, offset + limit);
     
     data = {totalPages: book.totalPages, pages: paginatedContent};
-    //await redis.set(cacheKey, JSON.stringify(data), 'EX', 3600);
+    await redis.set(cacheKey, JSON.stringify(data), 'EX', 3600);
     res.status(200).json({
       totalPages: book.totalPages,
       pages: paginatedContent
@@ -246,5 +246,22 @@ export const uploadBookContent = async(req,res) => {
   } catch (error) {
     console.error('❌ Error uploading book content:', error);
     res.status(500).json({ message: "Internal server error while uploading book content" });
+  }
+};
+
+export const removeBook = async (req, res) => {
+  try {
+    const bookId = req.params.id;
+
+    const deletedBook = await Book.findByIdAndDelete(bookId);
+
+    if (!deletedBook) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+
+    res.status(200).json({ message: 'Book deleted successfully', book: deletedBook });
+  } catch (error) {
+    console.error('Delete book error:', error);
+    res.status(500).json({ message: 'Server error while deleting book' });
   }
 };
