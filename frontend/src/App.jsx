@@ -16,6 +16,7 @@ import RemoveBook from './componenets/RemoveBook'
 import FindBook from './componenets/FindBook'
 import { Navigate } from 'react-router-dom'
 import useAuth from './hooks/useAuth'
+import SearchBooks from './componenets/searchBook'
 
 function App() {
 
@@ -32,6 +33,7 @@ function App() {
             <Route path='bookinfo/:bookid' element={<BookInfo/>}/>
             <Route path='readbook/:bookid' element={<ReadBook/>}/>
             <Route path='book/:bookId/discussion/:discussionId' element={<Discussion/>} />
+            <Route path='search' element={<SearchBooks/>} />
           </Route>
         </Route>
 
